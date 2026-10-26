@@ -3,16 +3,17 @@ import {Hono}  from "hono";
 
 const app = new Hono()
 
-app.get("/", (c) => {
-  return c.json({
-    message: "Hello"
-  })
-})
-
 app.notFound((c) => {
   return c.json({
    message: `${c.req.path} - not found`
   })
+})
+
+app.onError((error, c) => {
+ console.log("[ERROR]", error.message, error)
+ return c.json({
+  message: error.message || "Unknown error occured"
+ }, 500)
 })
 
 serve({
