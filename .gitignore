@@ -30,3 +30,8 @@ lerna-debug.log*
 # build
 dist/
 
+
+# sqlite databases
+*.sqlite
+*.sqlite-journal
+*.db

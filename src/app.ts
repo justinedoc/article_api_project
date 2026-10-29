@@ -52,9 +52,8 @@ app.route("/api", routes);
 app.doc("/api/doc", {
   openapi: "3.1.0",
   info: {
-    title: "Community Blog & Article API",
+    title: "SIWES Project - Article API",
     version: "1.0.0",
-    description: "comprehensive publishing platform api with users, posts, and comments",
   },
   servers: [
     {
