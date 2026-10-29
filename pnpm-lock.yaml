@@ -29,6 +29,9 @@ importers:
       hono:
         specifier: ^4.13.14
         version: 4.13.14
+      stoker:
+        specifier: ^2.0.1
+        version: 2.0.1(@hono/zod-openapi@1.6.3(hono@4.13.14)(zod@4.6.7))(hono@4.13.14)(openapi3-ts@4.6.2)
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -725,6 +728,21 @@ packages:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
     engines: {node: '>=8'}
 
+  stoker@2.0.1:
+    resolution: {integrity: sha512-liSQNnJmn8fWSEan7sVaFe6iSHuN3X02fDGLS6snwW+FUuKi5HmKUHm3P+Kzr5xiDPqRpmSTtmGEBbSL9H2zkQ==}
+    peerDependencies:
+      '@asteasolutions/zod-to-openapi': ^8.0.0
+      '@hono/zod-openapi': '>=1.0.0'
+      hono: ^4.0.0
+      openapi3-ts: ^4.5.0
+    peerDependenciesMeta:
+      '@asteasolutions/zod-to-openapi':
+        optional: true
+      '@hono/zod-openapi':
+        optional: true
+      openapi3-ts:
+        optional: true
+
   tagged-tag@1.0.0:
     resolution: {integrity: sha512-yEFYrVhod+hdNyx7g5Bnkkb0G6si8HJurOoOEgC8B/O0uXLHlaey/65KRv6cuWBNhBgHKAROVpc7QyYqE5gFng==}
     engines: {node: '>=20'}
@@ -1141,6 +1159,13 @@ snapshots:
       queue-microtask: 1.2.3
 
   slash@3.0.0: {}
+
+  stoker@2.0.1(@hono/zod-openapi@1.6.3(hono@4.13.14)(zod@4.6.7))(hono@4.13.14)(openapi3-ts@4.6.2):
+    dependencies:
+      hono: 4.13.14
+    optionalDependencies:
+      '@hono/zod-openapi': 1.6.3(hono@4.13.14)(zod@4.6.7)
+      openapi3-ts: 4.6.2
 
   tagged-tag@1.0.0: {}
 

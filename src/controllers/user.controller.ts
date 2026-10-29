@@ -10,19 +10,13 @@ import type {
 import { UserService } from "../services/user.service.js";
 import { AuthService } from "../services/auth.service.js";
 import { getAuthUser } from "../middlewares/auth.middleware.js";
+import { httpStatusCodes } from "../utils/openapi-helpers.js";
 
 export class UserController {
   static getUsers: AppRouteHandler<GetUsersRoute> = async (c) => {
     const { page, limit, search } = c.req.valid("query");
     const result = await UserService.getUsers({ page, limit, search });
-    return c.json(
-      {
-        success: true,
-        message: "Users retrieved successfully",
-        ...result,
-      },
-      200
-    );
+    return c.json(result, httpStatusCodes.OK);
   };
 
   static getMe: AppRouteHandler<GetMeRoute> = async (c) => {
@@ -34,7 +28,7 @@ export class UserController {
         message: "Current user account retrieved successfully",
         data: result,
       },
-      200
+      httpStatusCodes.OK
     );
   };
 
@@ -47,7 +41,7 @@ export class UserController {
         message: "User profile retrieved successfully",
         data: result,
       },
-      200
+      httpStatusCodes.OK
     );
   };
 
@@ -61,27 +55,20 @@ export class UserController {
         message: "Profile updated successfully",
         data: result,
       },
-      200
+      httpStatusCodes.OK
     );
   };
 
   static deleteAccount: AppRouteHandler<DeleteAccountRoute> = async (c) => {
     const user = getAuthUser(c);
     const result = await UserService.deleteAccount(user.id);
-    return c.json(result, 200);
+    return c.json(result, httpStatusCodes.OK);
   };
 
   static getUserArticles: AppRouteHandler<GetUserArticlesRoute> = async (c) => {
     const { username } = c.req.valid("param");
     const { page, limit } = c.req.valid("query");
     const result = await UserService.getUserArticles(username, { page, limit });
-    return c.json(
-      {
-        success: true,
-        message: `Articles by '${username}' retrieved successfully`,
-        ...result,
-      },
-      200
-    );
+    return c.json(result, httpStatusCodes.OK);
   };
 }

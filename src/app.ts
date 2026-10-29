@@ -2,24 +2,23 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { Scalar } from "@scalar/hono-api-reference";
+import { prettifyError } from "zod";
 import { routes } from "./routes/index.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import { notFoundHandler } from "./middlewares/not-found.middleware.js";
+import { httpStatusCodes } from "./utils/openapi-helpers.js";
 import type { AppBindings } from "./types.js";
 
 export const app = new OpenAPIHono<AppBindings>({
   strict: false,
   defaultHook: (result, c) => {
     if (!result.success) {
-      const errorDetails =
-        (result.error as any).issues?.map((i: any) => `${i.path.join(".")}: ${i.message}`).join("; ") ||
-        result.error.message;
       return c.json(
         {
           success: false,
-          message: `Validation failed: ${errorDetails}`,
+          message: prettifyError(result.error),
         },
-        422
+        httpStatusCodes.UNPROCESSABLE_ENTITY
       );
     }
   },
@@ -53,14 +52,14 @@ app.route("/api", routes);
 app.doc("/api/doc", {
   openapi: "3.1.0",
   info: {
-    title: "Article API",
+    title: "Community Blog & Article API",
     version: "1.0.0",
-    description: "simple rest api for articles and comments",
+    description: "comprehensive publishing platform api with users, posts, and comments",
   },
   servers: [
     {
       url: "http://localhost:3000",
-      description: "local server",
+      description: "local development server",
     },
   ],
 });

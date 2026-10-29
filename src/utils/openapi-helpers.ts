@@ -1,41 +1,77 @@
 import { z } from "@hono/zod-openapi";
+import * as httpStatusCodes from "stoker/http-status-codes";
+import { jsonContent, jsonContentRequired } from "stoker/openapi/helpers";
 
-export const jsonContent = <T extends z.ZodType>(schema: T, description: string) => ({
-  content: {
-    "application/json": {
-      schema,
-    },
-  },
-  description,
-});
+export { httpStatusCodes, jsonContent, jsonContentRequired };
 
-export const jsonContentRequired = <T extends z.ZodType>(schema: T, description: string) => ({
-  content: {
-    "application/json": {
-      schema,
-    },
-  },
-  required: true,
-  description,
-});
+export const createMessageSchema = (
+  exampleMessage = "Operation successful",
+  success = true
+) => {
+  return z
+    .object({
+      success: z.boolean().openapi({ example: success }),
+      message: z.string().openapi({ example: exampleMessage }),
+    })
+    .openapi({
+      example: {
+        success,
+        message: exampleMessage,
+      },
+    });
+};
 
-export const messageSchema = (message = "Operation successful", success = true) =>
-  z.object({
-    success: z.boolean().openapi({ example: success }),
-    message: z.string().openapi({ example: message }),
+export const dataResponseSchema = <T extends z.ZodType>(
+  dataSchema: T,
+  exampleMessage = "Operation successful",
+  exampleData?: unknown
+) => {
+  const schema = z.object({
+    success: z.boolean().openapi({ example: true }),
+    message: z.string().openapi({ example: exampleMessage }),
+    data: dataSchema,
   });
 
-export const errorSchema = z.object({
-  success: z.boolean().openapi({ example: false }),
-  message: z.string().openapi({ example: "An error occurred" }),
-  stack: z.string().optional(),
-});
+  if (exampleData !== undefined) {
+    return schema.openapi({
+      example: {
+        success: true,
+        message: exampleMessage,
+        data: exampleData,
+      },
+    });
+  }
+
+  return schema;
+};
 
 export const defaultErrorResponses = {
-  400: jsonContent(errorSchema, "Bad Request"),
-  401: jsonContent(errorSchema, "Unauthorized"),
-  403: jsonContent(errorSchema, "Forbidden"),
-  404: jsonContent(errorSchema, "Not Found"),
-  422: jsonContent(errorSchema, "Validation Error"),
-  500: jsonContent(errorSchema, "Internal Server Error"),
+  [httpStatusCodes.BAD_REQUEST]: jsonContent(
+    createMessageSchema("The request was invalid", false),
+    "Bad Request"
+  ),
+  [httpStatusCodes.UNAUTHORIZED]: jsonContent(
+    createMessageSchema("Unauthorized access", false),
+    "Unauthorized"
+  ),
+  [httpStatusCodes.FORBIDDEN]: jsonContent(
+    createMessageSchema("You do not have permission to perform this action", false),
+    "Forbidden"
+  ),
+  [httpStatusCodes.NOT_FOUND]: jsonContent(
+    createMessageSchema("The requested resource was not found", false),
+    "Not Found"
+  ),
+  [httpStatusCodes.CONFLICT]: jsonContent(
+    createMessageSchema("Resource conflict", false),
+    "Conflict"
+  ),
+  [httpStatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(
+    createMessageSchema("Validation failed. Please check your inputs", false),
+    "Validation Error"
+  ),
+  [httpStatusCodes.INTERNAL_SERVER_ERROR]: jsonContent(
+    createMessageSchema("An unexpected error occurred", false),
+    "Internal Server Error"
+  ),
 };

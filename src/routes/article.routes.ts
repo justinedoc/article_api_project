@@ -1,47 +1,129 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { ArticleController } from "../controllers/article.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
-import { paginationQuerySchema } from "../utils/pagination.js";
+import { paginationQuerySchema, paginatedResponseSchema } from "../utils/pagination.js";
 import type { AppBindings } from "../types.js";
 import {
+  createMessageSchema,
+  dataResponseSchema,
   defaultErrorResponses,
+  httpStatusCodes,
   jsonContent,
   jsonContentRequired,
-  messageSchema,
 } from "../utils/openapi-helpers.js";
 
 const createArticleSchema = z.object({
-  title: z.string().min(3).openapi({ example: "Getting Started with Node SQLite" }),
-  excerpt: z.string().optional().openapi({ example: "A simple introduction to SQLite with Hono." }),
-  body: z.string().min(5).openapi({ example: "Here is the full article content explaining how to use SQLite..." }),
-});
-
-const updateArticleSchema = z.object({
-  title: z.string().min(3).optional(),
-  excerpt: z.string().optional(),
-  body: z.string().min(5).optional(),
-});
-
-const articleItemSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  slug: z.string(),
-  excerpt: z.string().nullable(),
-  body: z.string(),
-  createdAt: z.any(),
-  updatedAt: z.any(),
-  author: z.object({
-    id: z.number(),
-    email: z.string().optional(),
-    username: z.string().nullable(),
-    displayName: z.string().nullable(),
-    image: z.string().nullable(),
+  title: z.string().trim().min(3).max(200).openapi({
+    description: "article title",
+    example: "Getting Started with Node SQLite",
+  }),
+  excerpt: z.string().trim().max(500).optional().openapi({
+    description: "short preview or summary",
+    example: "A simple introduction to SQLite with Hono.",
+  }),
+  body: z.string().min(5).openapi({
+    description: "full article content",
+    example: "Here is the full article content explaining how to use SQLite with Node.js...",
   }),
 });
 
+const updateArticleSchema = z.object({
+  title: z.string().trim().min(3).max(200).optional().openapi({
+    description: "updated title",
+    example: "Getting Started with Node SQLite (Second Edition)",
+  }),
+  excerpt: z.string().trim().max(500).optional().openapi({
+    description: "updated excerpt",
+    example: "An updated guide to SQLite with Hono.",
+  }),
+  body: z.string().min(5).optional().openapi({
+    description: "updated body content",
+    example: "Updated content with additional insights...",
+  }),
+});
+
+export const articleAuthorSchema = z.object({
+  id: z.number().int().openapi({ description: "author account id", example: 1 }),
+  email: z.string().email().openapi({ description: "author email", example: "janedoe@example.com" }),
+  username: z.string().nullable().openapi({ description: "author username handle", example: "janedoe" }),
+  displayName: z.string().nullable().openapi({ description: "author display name", example: "Jane Doe" }),
+  image: z.string().nullable().openapi({ description: "author avatar url", example: "https://example.com/avatar.jpg" }),
+});
+
+export const articleItemSchema = z.object({
+  id: z.string().openapi({ description: "article unique id", example: "art_12345678" }),
+  title: z.string().openapi({ description: "article title", example: "Getting Started with Node SQLite" }),
+  slug: z.string().openapi({ description: "url-friendly slug", example: "getting-started-with-node-sqlite-x92a1" }),
+  excerpt: z.string().nullable().openapi({ description: "article preview summary", example: "A simple introduction to SQLite with Hono." }),
+  body: z.string().openapi({ description: "article content", example: "Here is the full article content..." }),
+  createdAt: z.coerce.date().openapi({ description: "created timestamp", example: "2026-10-29T10:00:00.000Z" }),
+  updatedAt: z.coerce.date().openapi({ description: "last updated timestamp", example: "2026-10-29T10:00:00.000Z" }),
+  author: articleAuthorSchema,
+});
+
+export const myArticleItemSchema = z.object({
+  id: z.string().openapi({ description: "article unique id", example: "art_12345678" }),
+  title: z.string().openapi({ description: "article title", example: "Getting Started with Node SQLite" }),
+  slug: z.string().openapi({ description: "url-friendly slug", example: "getting-started-with-node-sqlite-x92a1" }),
+  excerpt: z.string().nullable().openapi({ description: "article preview summary", example: "A simple introduction to SQLite with Hono." }),
+  body: z.string().openapi({ description: "article content", example: "Here is the full article content..." }),
+  createdAt: z.coerce.date().openapi({ description: "created timestamp", example: "2026-10-29T10:00:00.000Z" }),
+  updatedAt: z.coerce.date().openapi({ description: "last updated timestamp", example: "2026-10-29T10:00:00.000Z" }),
+});
+
+export const articleRecordSchema = z.object({
+  id: z.string().openapi({ description: "article unique id", example: "art_12345678" }),
+  authorId: z.number().int().openapi({ description: "author account id", example: 1 }),
+  title: z.string().openapi({ description: "article title", example: "Getting Started with Node SQLite" }),
+  slug: z.string().openapi({ description: "url slug", example: "getting-started-with-node-sqlite-x92a1" }),
+  excerpt: z.string().nullable().openapi({ description: "preview excerpt", example: "A simple introduction to SQLite." }),
+  body: z.string().openapi({ description: "body text", example: "Full content text..." }),
+  createdAt: z.coerce.date().openapi({ description: "created date", example: "2026-10-29T10:00:00.000Z" }),
+  updatedAt: z.coerce.date().openapi({ description: "updated date", example: "2026-10-29T10:00:00.000Z" }),
+});
+
+const sampleArticleItem = {
+  id: "art_12345678",
+  title: "Getting Started with Node SQLite",
+  slug: "getting-started-with-node-sqlite-x92a1",
+  excerpt: "A simple introduction to SQLite with Hono.",
+  body: "Here is the full article content explaining how to use SQLite with Node.js and Hono...",
+  createdAt: "2026-10-29T10:00:00.000Z",
+  updatedAt: "2026-10-29T10:00:00.000Z",
+  author: {
+    id: 1,
+    email: "janedoe@example.com",
+    username: "janedoe",
+    displayName: "Jane Doe",
+    image: "https://example.com/avatar.jpg",
+  },
+};
+
+const sampleArticleRecord = {
+  id: "art_12345678",
+  authorId: 1,
+  title: "Getting Started with Node SQLite",
+  slug: "getting-started-with-node-sqlite-x92a1",
+  excerpt: "A simple introduction to SQLite with Hono.",
+  body: "Here is the full article content explaining how to use SQLite with Node.js and Hono...",
+  createdAt: "2026-10-29T10:00:00.000Z",
+  updatedAt: "2026-10-29T10:00:00.000Z",
+};
+
+const sampleMyArticle = {
+  id: "art_12345678",
+  title: "Getting Started with Node SQLite",
+  slug: "getting-started-with-node-sqlite-x92a1",
+  excerpt: "A simple introduction to SQLite with Hono.",
+  body: "Here is the full article content explaining how to use SQLite with Node.js and Hono...",
+  createdAt: "2026-10-29T10:00:00.000Z",
+  updatedAt: "2026-10-29T10:00:00.000Z",
+};
+
 const listArticlesQuerySchema = paginationQuerySchema.extend({
   search: z.string().optional().openapi({
-    description: "search title",
+    param: { name: "search", in: "query" },
+    description: "search filter by article title",
     example: "SQLite",
   }),
 });
@@ -57,12 +139,12 @@ export const getMyArticlesRoute = createRoute({
     query: paginationQuerySchema,
   },
   responses: {
-    200: jsonContent(
-      z.object({
-        success: z.boolean(),
-        message: z.string(),
-        data: z.array(z.any()),
-        pagination: z.any(),
+    [httpStatusCodes.OK]: jsonContent(
+      paginatedResponseSchema(myArticleItemSchema, "my articles retrieved", [sampleMyArticle], {
+        page: 1,
+        limit: 10,
+        total: 1,
+        totalPages: 1,
       }),
       "my articles"
     ),
@@ -78,15 +160,11 @@ export const createArticleRoute = createRoute({
   security: [{ BearerAuth: [] }],
   middleware: [authMiddleware],
   request: {
-    body: jsonContentRequired(createArticleSchema, "article data"),
+    body: jsonContentRequired(createArticleSchema, "article creation data"),
   },
   responses: {
-    201: jsonContent(
-      z.object({
-        success: z.boolean(),
-        message: z.string(),
-        data: z.any(),
-      }),
+    [httpStatusCodes.CREATED]: jsonContent(
+      dataResponseSchema(articleRecordSchema, "article created successfully", sampleArticleRecord),
       "article created"
     ),
     ...defaultErrorResponses,
@@ -102,17 +180,12 @@ export const listArticlesRoute = createRoute({
     query: listArticlesQuerySchema,
   },
   responses: {
-    200: jsonContent(
-      z.object({
-        success: z.boolean(),
-        message: z.string(),
-        data: z.array(articleItemSchema),
-        pagination: z.object({
-          page: z.number(),
-          limit: z.number(),
-          total: z.number(),
-          totalPages: z.number(),
-        }),
+    [httpStatusCodes.OK]: jsonContent(
+      paginatedResponseSchema(articleItemSchema, "articles retrieved", [sampleArticleItem], {
+        page: 1,
+        limit: 10,
+        total: 1,
+        totalPages: 1,
       }),
       "articles list"
     ),
@@ -127,16 +200,16 @@ export const getArticleRoute = createRoute({
   summary: "get article",
   request: {
     params: z.object({
-      id: z.string().openapi({ example: "getting-started-with-node-sqlite-abc12" }),
+      id: z.string().openapi({
+        param: { name: "id", in: "path" },
+        description: "article unique id or slug",
+        example: "getting-started-with-node-sqlite-x92a1",
+      }),
     }),
   },
   responses: {
-    200: jsonContent(
-      z.object({
-        success: z.boolean(),
-        message: z.string(),
-        data: articleItemSchema,
-      }),
+    [httpStatusCodes.OK]: jsonContent(
+      dataResponseSchema(articleItemSchema, "article retrieved", sampleArticleItem),
       "article details"
     ),
     ...defaultErrorResponses,
@@ -151,16 +224,18 @@ export const updateArticleRoute = createRoute({
   security: [{ BearerAuth: [] }],
   middleware: [authMiddleware],
   request: {
-    params: z.object({ id: z.string() }),
+    params: z.object({
+      id: z.string().openapi({
+        param: { name: "id", in: "path" },
+        description: "article unique id",
+        example: "art_12345678",
+      }),
+    }),
     body: jsonContentRequired(updateArticleSchema, "article update data"),
   },
   responses: {
-    200: jsonContent(
-      z.object({
-        success: z.boolean(),
-        message: z.string(),
-        data: z.any(),
-      }),
+    [httpStatusCodes.OK]: jsonContent(
+      dataResponseSchema(articleRecordSchema, "article updated successfully", sampleArticleRecord),
       "article updated"
     ),
     ...defaultErrorResponses,
@@ -175,10 +250,19 @@ export const deleteArticleRoute = createRoute({
   security: [{ BearerAuth: [] }],
   middleware: [authMiddleware],
   request: {
-    params: z.object({ id: z.string() }),
+    params: z.object({
+      id: z.string().openapi({
+        param: { name: "id", in: "path" },
+        description: "article unique id",
+        example: "art_12345678",
+      }),
+    }),
   },
   responses: {
-    200: jsonContent(messageSchema("Article deleted successfully"), "article deleted"),
+    [httpStatusCodes.OK]: jsonContent(
+      createMessageSchema("Article deleted successfully", true),
+      "article deleted"
+    ),
     ...defaultErrorResponses,
   },
 });

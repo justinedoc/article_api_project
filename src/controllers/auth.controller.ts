@@ -7,6 +7,7 @@ import type {
 } from "../routes/auth.routes.js";
 import { AuthService } from "../services/auth.service.js";
 import { getAuthUser } from "../middlewares/auth.middleware.js";
+import { httpStatusCodes } from "../utils/openapi-helpers.js";
 
 export class AuthController {
   static register: AppRouteHandler<RegisterRoute> = async (c) => {
@@ -18,7 +19,7 @@ export class AuthController {
         message: "Account registered successfully",
         data: result,
       },
-      201
+      httpStatusCodes.CREATED
     );
   };
 
@@ -31,7 +32,7 @@ export class AuthController {
         message: "Logged in successfully",
         data: result,
       },
-      200
+      httpStatusCodes.OK
     );
   };
 
@@ -44,7 +45,7 @@ export class AuthController {
         message: "Profile retrieved successfully",
         data: result,
       },
-      200
+      httpStatusCodes.OK
     );
   };
 
@@ -52,6 +53,6 @@ export class AuthController {
     const user = getAuthUser(c);
     const body = c.req.valid("json");
     const result = await AuthService.changePassword(user.id, body);
-    return c.json(result, 200);
+    return c.json(result, httpStatusCodes.OK);
   };
 }

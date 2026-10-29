@@ -57,8 +57,8 @@ export class UserService {
     userId: number,
     data: {
       displayName?: string;
-      bio?: string;
-      image?: string;
+      bio?: string | null;
+      image?: string | null;
       username?: string;
     }
   ) {

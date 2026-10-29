@@ -8,13 +8,13 @@ import type {
 } from "../routes/comment.routes.js";
 import { CommentService } from "../services/comment.service.js";
 import { getAuthUser } from "../middlewares/auth.middleware.js";
+import { httpStatusCodes } from "../utils/openapi-helpers.js";
 
 export class CommentController {
   static createComment: AppRouteHandler<CreateCommentRoute> = async (c) => {
-    const { articleId } = c.req.valid("param");
     const user = getAuthUser(c);
+    const { articleId } = c.req.valid("param");
     const { body } = c.req.valid("json");
-
     const result = await CommentService.createComment(articleId, user.id, body);
     return c.json(
       {
@@ -22,23 +22,15 @@ export class CommentController {
         message: "Comment added successfully",
         data: result,
       },
-      201
+      httpStatusCodes.CREATED
     );
   };
 
   static getComments: AppRouteHandler<ListCommentsRoute> = async (c) => {
     const { articleId } = c.req.valid("param");
     const { page, limit } = c.req.valid("query");
-
     const result = await CommentService.getCommentsByArticle(articleId, { page, limit });
-    return c.json(
-      {
-        success: true,
-        message: "Comments retrieved successfully",
-        ...result,
-      },
-      200
-    );
+    return c.json(result, httpStatusCodes.OK);
   };
 
   static getCommentById: AppRouteHandler<GetCommentByIdRoute> = async (c) => {
@@ -50,15 +42,14 @@ export class CommentController {
         message: "Comment retrieved successfully",
         data: result,
       },
-      200
+      httpStatusCodes.OK
     );
   };
 
   static updateComment: AppRouteHandler<UpdateCommentRoute> = async (c) => {
-    const { commentId } = c.req.valid("param");
     const user = getAuthUser(c);
+    const { commentId } = c.req.valid("param");
     const { body } = c.req.valid("json");
-
     const result = await CommentService.updateComment(commentId, user.id, body);
     return c.json(
       {
@@ -66,21 +57,14 @@ export class CommentController {
         message: "Comment updated successfully",
         data: result,
       },
-      200
+      httpStatusCodes.OK
     );
   };
 
   static deleteComment: AppRouteHandler<DeleteCommentRoute> = async (c) => {
-    const { commentId } = c.req.valid("param");
     const user = getAuthUser(c);
-
+    const { commentId } = c.req.valid("param");
     const result = await CommentService.deleteComment(commentId, user.id);
-    return c.json(
-      {
-        success: true,
-        message: result.message,
-      },
-      200
-    );
+    return c.json(result, httpStatusCodes.OK);
   };
 }
