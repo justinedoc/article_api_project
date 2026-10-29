@@ -86,7 +86,7 @@ export class CommentService {
         },
       })
       .from(comments)
-      .leftJoin(accounts, eq(comments.authorId, accounts.id))
+      .innerJoin(accounts, eq(comments.authorId, accounts.id))
       .leftJoin(profiles, eq(accounts.id, profiles.userId))
       .where(eq(comments.articleId, articleId))
       .orderBy(desc(comments.createdAt))
@@ -113,7 +113,7 @@ export class CommentService {
         },
       })
       .from(comments)
-      .leftJoin(accounts, eq(comments.authorId, accounts.id))
+      .innerJoin(accounts, eq(comments.authorId, accounts.id))
       .leftJoin(profiles, eq(accounts.id, profiles.userId))
       .where(eq(comments.id, commentId))
       .limit(1);

@@ -1,11 +1,19 @@
-import type { Context } from "hono";
+import type { AppRouteHandler } from "../types.js";
+import type {
+  GetMyArticlesRoute,
+  CreateArticleRoute,
+  ListArticlesRoute,
+  GetArticleRoute,
+  UpdateArticleRoute,
+  DeleteArticleRoute,
+} from "../routes/article.routes.js";
 import { ArticleService } from "../services/article.service.js";
-import type { AuthUser } from "../types.js";
+import { getAuthUser } from "../middlewares/auth.middleware.js";
 
 export class ArticleController {
-  static async createArticle(c: Context) {
-    const user = c.get("user") as AuthUser;
-    const body = await c.req.json();
+  static createArticle: AppRouteHandler<CreateArticleRoute> = async (c) => {
+    const user = getAuthUser(c);
+    const body = c.req.valid("json");
     const result = await ArticleService.createArticle(user.id, body);
     return c.json(
       {
@@ -15,13 +23,10 @@ export class ArticleController {
       },
       201
     );
-  }
+  };
 
-  static async getArticles(c: Context) {
-    const page = Number(c.req.query("page")) || 1;
-    const limit = Number(c.req.query("limit")) || 10;
-    const search = c.req.query("search");
-
+  static getArticles: AppRouteHandler<ListArticlesRoute> = async (c) => {
+    const { page, limit, search } = c.req.valid("query");
     const result = await ArticleService.getArticles({ page, limit, search });
     return c.json(
       {
@@ -31,13 +36,11 @@ export class ArticleController {
       },
       200
     );
-  }
+  };
 
-  static async getMyArticles(c: Context) {
-    const user = c.get("user") as AuthUser;
-    const page = Number(c.req.query("page")) || 1;
-    const limit = Number(c.req.query("limit")) || 10;
-
+  static getMyArticles: AppRouteHandler<GetMyArticlesRoute> = async (c) => {
+    const user = getAuthUser(c);
+    const { page, limit } = c.req.valid("query");
     const result = await ArticleService.getMyArticles(user.id, { page, limit });
     return c.json(
       {
@@ -47,10 +50,10 @@ export class ArticleController {
       },
       200
     );
-  }
+  };
 
-  static async getArticleById(c: Context) {
-    const id = c.req.param("id")!;
+  static getArticleById: AppRouteHandler<GetArticleRoute> = async (c) => {
+    const { id } = c.req.valid("param");
     const result = await ArticleService.getArticleById(id);
     return c.json(
       {
@@ -60,12 +63,12 @@ export class ArticleController {
       },
       200
     );
-  }
+  };
 
-  static async updateArticle(c: Context) {
-    const id = c.req.param("id")!;
-    const user = c.get("user") as AuthUser;
-    const body = await c.req.json();
+  static updateArticle: AppRouteHandler<UpdateArticleRoute> = async (c) => {
+    const { id } = c.req.valid("param");
+    const user = getAuthUser(c);
+    const body = c.req.valid("json");
 
     const result = await ArticleService.updateArticle(id, user.id, body);
     return c.json(
@@ -76,11 +79,11 @@ export class ArticleController {
       },
       200
     );
-  }
+  };
 
-  static async deleteArticle(c: Context) {
-    const id = c.req.param("id")!;
-    const user = c.get("user") as AuthUser;
+  static deleteArticle: AppRouteHandler<DeleteArticleRoute> = async (c) => {
+    const { id } = c.req.valid("param");
+    const user = getAuthUser(c);
 
     const result = await ArticleService.deleteArticle(id, user.id);
     return c.json(
@@ -90,5 +93,5 @@ export class ArticleController {
       },
       200
     );
-  }
+  };
 }

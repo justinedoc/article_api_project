@@ -2,14 +2,13 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { UserController } from "../controllers/user.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { paginationQuerySchema } from "../utils/pagination.js";
+import type { AppBindings } from "../types.js";
 import {
   defaultErrorResponses,
   jsonContent,
   jsonContentRequired,
   messageSchema,
 } from "../utils/openapi-helpers.js";
-
-export const userRouter = new OpenAPIHono();
 
 const updateProfileSchema = z.object({
   displayName: z.string().optional().openapi({ example: "Jane Smith" }),
@@ -34,14 +33,14 @@ const profileResponseSchema = z.object({
 });
 
 const listUsersQuerySchema = paginationQuerySchema.extend({
-  search: z.string().optional().openapi({ description: "Search by username" }),
+  search: z.string().optional().openapi({ description: "search username" }),
 });
 
-const getUsersRoute = createRoute({
+export const getUsersRoute = createRoute({
   method: "get",
   path: "/",
-  tags: ["Users & Profiles"],
-  summary: "List all users/authors with offset pagination",
+  tags: ["Users"],
+  summary: "list users",
   request: {
     query: listUsersQuerySchema,
   },
@@ -53,17 +52,17 @@ const getUsersRoute = createRoute({
         data: z.array(z.any()),
         pagination: z.any(),
       }),
-      "Users retrieved"
+      "users list"
     ),
     ...defaultErrorResponses,
   },
 });
 
-const getMeRoute = createRoute({
+export const getMeRoute = createRoute({
   method: "get",
   path: "/me",
-  tags: ["Users & Profiles"],
-  summary: "Get current user profile and account details",
+  tags: ["Users"],
+  summary: "get my profile",
   security: [{ BearerAuth: [] }],
   middleware: [authMiddleware],
   responses: {
@@ -73,46 +72,46 @@ const getMeRoute = createRoute({
         message: z.string(),
         data: z.any(),
       }),
-      "Current user profile"
+      "profile details"
     ),
     ...defaultErrorResponses,
   },
 });
 
-const updateProfileRoute = createRoute({
+export const updateProfileRoute = createRoute({
   method: "patch",
   path: "/me",
-  tags: ["Users & Profiles"],
-  summary: "Update current authenticated user's profile",
+  tags: ["Users"],
+  summary: "update profile",
   security: [{ BearerAuth: [] }],
   middleware: [authMiddleware],
   request: {
-    body: jsonContentRequired(updateProfileSchema, "Profile update payload"),
+    body: jsonContentRequired(updateProfileSchema, "profile data"),
   },
   responses: {
-    200: jsonContent(profileResponseSchema, "Profile updated successfully"),
+    200: jsonContent(profileResponseSchema, "profile updated"),
     ...defaultErrorResponses,
   },
 });
 
-const deleteAccountRoute = createRoute({
+export const deleteAccountRoute = createRoute({
   method: "delete",
   path: "/me",
-  tags: ["Users & Profiles"],
-  summary: "Permanently delete user account, profile, articles, and comments",
+  tags: ["Users"],
+  summary: "delete account",
   security: [{ BearerAuth: [] }],
   middleware: [authMiddleware],
   responses: {
-    200: jsonContent(messageSchema("Account and profile deleted successfully"), "Account deleted"),
+    200: jsonContent(messageSchema("Account and profile deleted successfully"), "account deleted"),
     ...defaultErrorResponses,
   },
 });
 
-const getUserArticlesRoute = createRoute({
+export const getUserArticlesRoute = createRoute({
   method: "get",
   path: "/:username/articles",
-  tags: ["Users & Profiles"],
-  summary: "Get all articles published by a specific author",
+  tags: ["Users"],
+  summary: "get author articles",
   request: {
     params: z.object({ username: z.string() }),
     query: paginationQuerySchema,
@@ -125,31 +124,39 @@ const getUserArticlesRoute = createRoute({
         data: z.array(z.any()),
         pagination: z.any(),
       }),
-      "Author articles"
+      "author articles"
     ),
     ...defaultErrorResponses,
   },
 });
 
-const getProfileRoute = createRoute({
+export const getProfileRoute = createRoute({
   method: "get",
   path: "/:username",
-  tags: ["Users & Profiles"],
-  summary: "Get user public profile by username",
+  tags: ["Users"],
+  summary: "get user profile",
   request: {
     params: z.object({
       username: z.string().openapi({ example: "janedoe" }),
     }),
   },
   responses: {
-    200: jsonContent(profileResponseSchema, "Profile found"),
+    200: jsonContent(profileResponseSchema, "profile found"),
     ...defaultErrorResponses,
   },
 });
 
-userRouter.openapi(getUsersRoute, UserController.getUsers as any);
-userRouter.openapi(getMeRoute, UserController.getMe as any);
-userRouter.openapi(updateProfileRoute, UserController.updateProfile as any);
-userRouter.openapi(deleteAccountRoute, UserController.deleteAccount as any);
-userRouter.openapi(getUserArticlesRoute, UserController.getUserArticles as any);
-userRouter.openapi(getProfileRoute, UserController.getProfile as any);
+export type GetUsersRoute = typeof getUsersRoute;
+export type GetMeRoute = typeof getMeRoute;
+export type UpdateProfileRoute = typeof updateProfileRoute;
+export type DeleteAccountRoute = typeof deleteAccountRoute;
+export type GetUserArticlesRoute = typeof getUserArticlesRoute;
+export type GetProfileRoute = typeof getProfileRoute;
+
+export const userRouter = new OpenAPIHono<AppBindings>()
+  .openapi(getUsersRoute, UserController.getUsers)
+  .openapi(getMeRoute, UserController.getMe)
+  .openapi(updateProfileRoute, UserController.updateProfile)
+  .openapi(deleteAccountRoute, UserController.deleteAccount)
+  .openapi(getUserArticlesRoute, UserController.getUserArticles)
+  .openapi(getProfileRoute, UserController.getProfile);

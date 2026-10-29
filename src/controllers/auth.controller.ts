@@ -1,10 +1,16 @@
-import type { Context } from "hono";
+import type { AppRouteHandler } from "../types.js";
+import type {
+  RegisterRoute,
+  LoginRoute,
+  MeRoute,
+  ChangePasswordRoute,
+} from "../routes/auth.routes.js";
 import { AuthService } from "../services/auth.service.js";
-import type { AuthUser } from "../types.js";
+import { getAuthUser } from "../middlewares/auth.middleware.js";
 
 export class AuthController {
-  static async register(c: Context) {
-    const body = await c.req.json();
+  static register: AppRouteHandler<RegisterRoute> = async (c) => {
+    const body = c.req.valid("json");
     const result = await AuthService.register(body);
     return c.json(
       {
@@ -14,10 +20,10 @@ export class AuthController {
       },
       201
     );
-  }
+  };
 
-  static async login(c: Context) {
-    const body = await c.req.json();
+  static login: AppRouteHandler<LoginRoute> = async (c) => {
+    const body = c.req.valid("json");
     const result = await AuthService.login(body);
     return c.json(
       {
@@ -27,10 +33,10 @@ export class AuthController {
       },
       200
     );
-  }
+  };
 
-  static async getMe(c: Context) {
-    const user = c.get("user") as AuthUser;
+  static getMe: AppRouteHandler<MeRoute> = async (c) => {
+    const user = getAuthUser(c);
     const result = await AuthService.getMe(user.id);
     return c.json(
       {
@@ -40,12 +46,12 @@ export class AuthController {
       },
       200
     );
-  }
+  };
 
-  static async changePassword(c: Context) {
-    const user = c.get("user") as AuthUser;
-    const body = await c.req.json();
+  static changePassword: AppRouteHandler<ChangePasswordRoute> = async (c) => {
+    const user = getAuthUser(c);
+    const body = c.req.valid("json");
     const result = await AuthService.changePassword(user.id, body);
     return c.json(result, 200);
-  }
+  };
 }

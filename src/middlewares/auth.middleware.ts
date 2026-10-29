@@ -1,8 +1,17 @@
+import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
 import { verify } from "hono/jwt";
 import { config } from "../config.js";
 import { ApiError } from "../utils/api-error.js";
 import type { AppBindings, AuthUser } from "../types.js";
+
+export const getAuthUser = (c: Context<AppBindings>): AuthUser => {
+  const user = c.get("user");
+  if (!user) {
+    throw ApiError.unauthorized("Authentication required");
+  }
+  return user;
+};
 
 export const authMiddleware = createMiddleware<AppBindings>(async (c, next) => {
   const authHeader = c.req.header("Authorization");
@@ -40,7 +49,7 @@ export const optionalAuthMiddleware = createMiddleware<AppBindings>(async (c, ne
         });
       }
     } catch {
-      // Continue without authenticated user
+      // continue as guest if token is missing or invalid
     }
   }
   await next();

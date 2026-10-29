@@ -2,14 +2,13 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { CommentController } from "../controllers/comment.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { paginationQuerySchema } from "../utils/pagination.js";
+import type { AppBindings } from "../types.js";
 import {
   defaultErrorResponses,
   jsonContent,
   jsonContentRequired,
   messageSchema,
 } from "../utils/openapi-helpers.js";
-
-export const commentRouter = new OpenAPIHono();
 
 const createCommentSchema = z.object({
   body: z.string().min(1).openapi({ example: "This was a really helpful article!" }),
@@ -34,18 +33,18 @@ const commentItemSchema = z.object({
   }),
 });
 
-const createCommentRoute = createRoute({
+export const createCommentRoute = createRoute({
   method: "post",
   path: "/articles/:articleId/comments",
   tags: ["Comments"],
-  summary: "Add a comment to an article",
+  summary: "create comment",
   security: [{ BearerAuth: [] }],
   middleware: [authMiddleware],
   request: {
     params: z.object({
       articleId: z.string().openapi({ example: "art_123" }),
     }),
-    body: jsonContentRequired(createCommentSchema, "Comment payload"),
+    body: jsonContentRequired(createCommentSchema, "comment data"),
   },
   responses: {
     201: jsonContent(
@@ -54,17 +53,17 @@ const createCommentRoute = createRoute({
         message: z.string(),
         data: commentItemSchema,
       }),
-      "Comment created successfully"
+      "comment created"
     ),
     ...defaultErrorResponses,
   },
 });
 
-const listCommentsRoute = createRoute({
+export const listCommentsRoute = createRoute({
   method: "get",
   path: "/articles/:articleId/comments",
   tags: ["Comments"],
-  summary: "List comments for an article with offset pagination",
+  summary: "list comments",
   request: {
     params: z.object({
       articleId: z.string(),
@@ -84,17 +83,17 @@ const listCommentsRoute = createRoute({
           totalPages: z.number(),
         }),
       }),
-      "Comments retrieved successfully"
+      "comments list"
     ),
     ...defaultErrorResponses,
   },
 });
 
-const getCommentByIdRoute = createRoute({
+export const getCommentByIdRoute = createRoute({
   method: "get",
   path: "/comments/:commentId",
   tags: ["Comments"],
-  summary: "Get a single comment by ID",
+  summary: "get comment",
   request: {
     params: z.object({
       commentId: z.string(),
@@ -107,24 +106,24 @@ const getCommentByIdRoute = createRoute({
         message: z.string(),
         data: commentItemSchema,
       }),
-      "Comment retrieved"
+      "comment details"
     ),
     ...defaultErrorResponses,
   },
 });
 
-const updateCommentRoute = createRoute({
+export const updateCommentRoute = createRoute({
   method: "patch",
   path: "/comments/:commentId",
   tags: ["Comments"],
-  summary: "Update a comment by ID (author only)",
+  summary: "update comment",
   security: [{ BearerAuth: [] }],
   middleware: [authMiddleware],
   request: {
     params: z.object({
       commentId: z.string(),
     }),
-    body: jsonContentRequired(updateCommentSchema, "Updated comment payload"),
+    body: jsonContentRequired(updateCommentSchema, "comment update data"),
   },
   responses: {
     200: jsonContent(
@@ -133,17 +132,17 @@ const updateCommentRoute = createRoute({
         message: z.string(),
         data: z.any(),
       }),
-      "Comment updated successfully"
+      "comment updated"
     ),
     ...defaultErrorResponses,
   },
 });
 
-const deleteCommentRoute = createRoute({
+export const deleteCommentRoute = createRoute({
   method: "delete",
   path: "/comments/:commentId",
   tags: ["Comments"],
-  summary: "Delete a comment by ID (author only)",
+  summary: "delete comment",
   security: [{ BearerAuth: [] }],
   middleware: [authMiddleware],
   request: {
@@ -152,13 +151,20 @@ const deleteCommentRoute = createRoute({
     }),
   },
   responses: {
-    200: jsonContent(messageSchema("Comment deleted successfully"), "Comment deleted"),
+    200: jsonContent(messageSchema("Comment deleted successfully"), "comment deleted"),
     ...defaultErrorResponses,
   },
 });
 
-commentRouter.openapi(createCommentRoute, CommentController.createComment as any);
-commentRouter.openapi(listCommentsRoute, CommentController.getComments as any);
-commentRouter.openapi(getCommentByIdRoute, CommentController.getCommentById as any);
-commentRouter.openapi(updateCommentRoute, CommentController.updateComment as any);
-commentRouter.openapi(deleteCommentRoute, CommentController.deleteComment as any);
+export type CreateCommentRoute = typeof createCommentRoute;
+export type ListCommentsRoute = typeof listCommentsRoute;
+export type GetCommentByIdRoute = typeof getCommentByIdRoute;
+export type UpdateCommentRoute = typeof updateCommentRoute;
+export type DeleteCommentRoute = typeof deleteCommentRoute;
+
+export const commentRouter = new OpenAPIHono<AppBindings>()
+  .openapi(createCommentRoute, CommentController.createComment)
+  .openapi(listCommentsRoute, CommentController.getComments)
+  .openapi(getCommentByIdRoute, CommentController.getCommentById)
+  .openapi(updateCommentRoute, CommentController.updateComment)
+  .openapi(deleteCommentRoute, CommentController.deleteComment);

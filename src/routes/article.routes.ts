@@ -2,14 +2,13 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { ArticleController } from "../controllers/article.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { paginationQuerySchema } from "../utils/pagination.js";
+import type { AppBindings } from "../types.js";
 import {
   defaultErrorResponses,
   jsonContent,
   jsonContentRequired,
   messageSchema,
 } from "../utils/openapi-helpers.js";
-
-export const articleRouter = new OpenAPIHono();
 
 const createArticleSchema = z.object({
   title: z.string().min(3).openapi({ example: "Getting Started with Node SQLite" }),
@@ -42,16 +41,16 @@ const articleItemSchema = z.object({
 
 const listArticlesQuerySchema = paginationQuerySchema.extend({
   search: z.string().optional().openapi({
-    description: "Search filter by article title",
+    description: "search title",
     example: "SQLite",
   }),
 });
 
-const getMyArticlesRoute = createRoute({
+export const getMyArticlesRoute = createRoute({
   method: "get",
   path: "/me",
   tags: ["Articles"],
-  summary: "List all articles authored by the current authenticated user",
+  summary: "get my articles",
   security: [{ BearerAuth: [] }],
   middleware: [authMiddleware],
   request: {
@@ -65,21 +64,21 @@ const getMyArticlesRoute = createRoute({
         data: z.array(z.any()),
         pagination: z.any(),
       }),
-      "My articles retrieved"
+      "my articles"
     ),
     ...defaultErrorResponses,
   },
 });
 
-const createArticleRoute = createRoute({
+export const createArticleRoute = createRoute({
   method: "post",
   path: "/",
   tags: ["Articles"],
-  summary: "Create a new article",
+  summary: "create article",
   security: [{ BearerAuth: [] }],
   middleware: [authMiddleware],
   request: {
-    body: jsonContentRequired(createArticleSchema, "Article creation payload"),
+    body: jsonContentRequired(createArticleSchema, "article data"),
   },
   responses: {
     201: jsonContent(
@@ -88,17 +87,17 @@ const createArticleRoute = createRoute({
         message: z.string(),
         data: z.any(),
       }),
-      "Article created successfully"
+      "article created"
     ),
     ...defaultErrorResponses,
   },
 });
 
-const listArticlesRoute = createRoute({
+export const listArticlesRoute = createRoute({
   method: "get",
   path: "/",
   tags: ["Articles"],
-  summary: "List articles with offset pagination",
+  summary: "list articles",
   request: {
     query: listArticlesQuerySchema,
   },
@@ -115,17 +114,17 @@ const listArticlesRoute = createRoute({
           totalPages: z.number(),
         }),
       }),
-      "Articles retrieved successfully"
+      "articles list"
     ),
     ...defaultErrorResponses,
   },
 });
 
-const getArticleRoute = createRoute({
+export const getArticleRoute = createRoute({
   method: "get",
   path: "/:id",
   tags: ["Articles"],
-  summary: "Get an article by ID or slug",
+  summary: "get article",
   request: {
     params: z.object({
       id: z.string().openapi({ example: "getting-started-with-node-sqlite-abc12" }),
@@ -138,22 +137,22 @@ const getArticleRoute = createRoute({
         message: z.string(),
         data: articleItemSchema,
       }),
-      "Article retrieved successfully"
+      "article details"
     ),
     ...defaultErrorResponses,
   },
 });
 
-const updateArticleRoute = createRoute({
+export const updateArticleRoute = createRoute({
   method: "patch",
   path: "/:id",
   tags: ["Articles"],
-  summary: "Update an article by ID (author only)",
+  summary: "update article",
   security: [{ BearerAuth: [] }],
   middleware: [authMiddleware],
   request: {
     params: z.object({ id: z.string() }),
-    body: jsonContentRequired(updateArticleSchema, "Article update payload"),
+    body: jsonContentRequired(updateArticleSchema, "article update data"),
   },
   responses: {
     200: jsonContent(
@@ -162,31 +161,39 @@ const updateArticleRoute = createRoute({
         message: z.string(),
         data: z.any(),
       }),
-      "Article updated successfully"
+      "article updated"
     ),
     ...defaultErrorResponses,
   },
 });
 
-const deleteArticleRoute = createRoute({
+export const deleteArticleRoute = createRoute({
   method: "delete",
   path: "/:id",
   tags: ["Articles"],
-  summary: "Delete an article by ID (author only)",
+  summary: "delete article",
   security: [{ BearerAuth: [] }],
   middleware: [authMiddleware],
   request: {
     params: z.object({ id: z.string() }),
   },
   responses: {
-    200: jsonContent(messageSchema("Article deleted successfully"), "Article deleted"),
+    200: jsonContent(messageSchema("Article deleted successfully"), "article deleted"),
     ...defaultErrorResponses,
   },
 });
 
-articleRouter.openapi(getMyArticlesRoute, ArticleController.getMyArticles as any);
-articleRouter.openapi(createArticleRoute, ArticleController.createArticle as any);
-articleRouter.openapi(listArticlesRoute, ArticleController.getArticles as any);
-articleRouter.openapi(getArticleRoute, ArticleController.getArticleById as any);
-articleRouter.openapi(updateArticleRoute, ArticleController.updateArticle as any);
-articleRouter.openapi(deleteArticleRoute, ArticleController.deleteArticle as any);
+export type GetMyArticlesRoute = typeof getMyArticlesRoute;
+export type CreateArticleRoute = typeof createArticleRoute;
+export type ListArticlesRoute = typeof listArticlesRoute;
+export type GetArticleRoute = typeof getArticleRoute;
+export type UpdateArticleRoute = typeof updateArticleRoute;
+export type DeleteArticleRoute = typeof deleteArticleRoute;
+
+export const articleRouter = new OpenAPIHono<AppBindings>()
+  .openapi(getMyArticlesRoute, ArticleController.getMyArticles)
+  .openapi(createArticleRoute, ArticleController.createArticle)
+  .openapi(listArticlesRoute, ArticleController.getArticles)
+  .openapi(getArticleRoute, ArticleController.getArticleById)
+  .openapi(updateArticleRoute, ArticleController.updateArticle)
+  .openapi(deleteArticleRoute, ArticleController.deleteArticle);

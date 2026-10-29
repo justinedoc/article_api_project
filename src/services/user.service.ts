@@ -109,7 +109,7 @@ export class UserService {
       throw ApiError.notFound("Account not found");
     }
 
-    // Cascade deletes profiles, articles, comments via foreign keys
+    // cascade deletes profile, articles, and comments
     await db.delete(accounts).where(eq(accounts.id, userId));
 
     return { success: true, message: "Account and profile deleted successfully" };

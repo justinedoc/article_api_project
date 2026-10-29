@@ -25,18 +25,18 @@ export const app = new OpenAPIHono<AppBindings>({
   },
 });
 
-// Configure BearerAuth security scheme for OpenAPI
+// configure jwt bearer auth for openapi
 app.openAPIRegistry.registerComponent("securitySchemes", "BearerAuth", {
   type: "http",
   scheme: "bearer",
   bearerFormat: "JWT",
-  description: "Enter your JWT token obtained from /api/auth/login or /api/auth/register",
+  description: "jwt bearer token",
 });
 
-// Built-in Request Logger
+// request logger
 app.use("*", logger());
 
-// CORS
+// allow cross-origin requests
 app.use(
   "*",
   cors({
@@ -46,37 +46,37 @@ app.use(
   })
 );
 
-// Mount API routes
+// mount api routes
 app.route("/api", routes);
 
-// OpenAPI JSON documentation endpoint
+// openapi json docs
 app.doc("/api/doc", {
   openapi: "3.1.0",
   info: {
-    title: "Article API (Vivi's Project)",
+    title: "Article API",
     version: "1.0.0",
-    description: "A clean, modular REST API for publishing articles and discussion comments using SQLite and Hono.",
+    description: "simple rest api for articles and comments",
   },
   servers: [
     {
       url: "http://localhost:3000",
-      description: "Local development server",
+      description: "local server",
     },
   ],
 });
 
-// Interactive Scalar API reference documentation with Saturn theme
+// scalar reference ui
 app.get(
   "/api/reference",
   Scalar(() => ({
     theme: "saturn",
     layout: "modern",
-    pageTitle: "Article API Reference Documentation",
+    pageTitle: "Article API Reference",
     url: "/api/doc",
   }))
 );
 
-// Fallback handlers
+// not found and error handlers
 app.notFound(notFoundHandler);
 app.onError(errorHandler);
 

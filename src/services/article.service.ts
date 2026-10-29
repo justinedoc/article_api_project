@@ -66,7 +66,7 @@ export class ArticleService {
         },
       })
       .from(articles)
-      .leftJoin(accounts, eq(articles.authorId, accounts.id))
+      .innerJoin(accounts, eq(articles.authorId, accounts.id))
       .leftJoin(profiles, eq(accounts.id, profiles.userId))
       .where(whereClause)
       .orderBy(desc(articles.createdAt))
@@ -128,7 +128,7 @@ export class ArticleService {
         },
       })
       .from(articles)
-      .leftJoin(accounts, eq(articles.authorId, accounts.id))
+      .innerJoin(accounts, eq(articles.authorId, accounts.id))
       .leftJoin(profiles, eq(accounts.id, profiles.userId))
       .where(or(eq(articles.id, idOrSlug), eq(articles.slug, idOrSlug)))
       .limit(1);

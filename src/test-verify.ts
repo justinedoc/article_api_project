@@ -1,7 +1,7 @@
 import { app } from "./app.js";
 
 async function runTests() {
-  console.log("=== Comprehensive Verification of All Requirements ===");
+  console.log("=== verification of all requirements ===");
 
   const timestamp = Date.now();
   const email = `author_${timestamp}@test.com`;
@@ -9,7 +9,7 @@ async function runTests() {
   const initialPassword = "initialPassword123";
   const newPassword = "newSecurePassword456";
 
-  // 1. Register Account & Profile
+  // register account and profile
   const regRes = await app.request("/api/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -20,11 +20,11 @@ async function runTests() {
       password: initialPassword,
     }),
   });
-  console.log("1. Register:", regRes.status);
+  console.log("1. register:", regRes.status);
   const regData = await regRes.json();
   let token = regData.data.token;
 
-  // 2. Change Password
+  // change password
   const pwdRes = await app.request("/api/auth/change-password", {
     method: "PATCH",
     headers: {
@@ -36,9 +36,9 @@ async function runTests() {
       newPassword: newPassword,
     }),
   });
-  console.log("2. Change Password:", pwdRes.status);
+  console.log("2. change password:", pwdRes.status);
 
-  // 3. Login with New Password
+  // login with new password
   const loginRes = await app.request("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -47,11 +47,11 @@ async function runTests() {
       password: newPassword,
     }),
   });
-  console.log("3. Login with new password:", loginRes.status);
+  console.log("3. login with new password:", loginRes.status);
   const loginData = await loginRes.json();
   token = loginData.data.token;
 
-  // 4. Update Profile (Name, Bio, Avatar)
+  // update profile details
   const profileRes = await app.request("/api/users/me", {
     method: "PATCH",
     headers: {
@@ -64,19 +64,19 @@ async function runTests() {
       image: "https://example.com/jane.jpg",
     }),
   });
-  console.log("4. Update Profile:", profileRes.status);
+  console.log("4. update profile:", profileRes.status);
   const updatedProfile = await profileRes.json();
-  console.log("   Updated name:", updatedProfile.data.displayName);
+  console.log("   updated name:", updatedProfile.data.displayName);
 
-  // 5. Get Public Profile by username
+  // fetch public profile
   const getProfileRes = await app.request(`/api/users/${username}`);
-  console.log("5. Get Public Profile:", getProfileRes.status);
+  console.log("5. get public profile:", getProfileRes.status);
 
-  // 6. List Users
+  // list users
   const listUsersRes = await app.request("/api/users?page=1&limit=5");
-  console.log("6. List Users/Authors:", listUsersRes.status);
+  console.log("6. list users:", listUsersRes.status);
 
-  // 7. Create Article (Post)
+  // create article
   const postRes = await app.request("/api/articles", {
     method: "POST",
     headers: {
@@ -89,29 +89,29 @@ async function runTests() {
       body: "Full content of the article detailing the community platform architecture...",
     }),
   });
-  console.log("7. Create Article:", postRes.status);
+  console.log("7. create article:", postRes.status);
   const postData = await postRes.json();
   const articleId = postData.data.id;
 
-  // 8. List Articles (Feed)
+  // list articles feed
   const listPostsRes = await app.request("/api/articles?page=1&limit=5");
-  console.log("8. List Articles:", listPostsRes.status);
+  console.log("8. list articles:", listPostsRes.status);
 
-  // 9. Get My Articles
+  // list my own articles
   const myPostsRes = await app.request("/api/articles/me", {
     headers: { Authorization: `Bearer ${token}` },
   });
-  console.log("9. Get My Articles:", myPostsRes.status);
+  console.log("9. get my articles:", myPostsRes.status);
 
-  // 10. Get Author Articles
+  // list articles by author
   const authorPostsRes = await app.request(`/api/users/${username}/articles`);
-  console.log("10. Get Author Articles:", authorPostsRes.status);
+  console.log("10. get author articles:", authorPostsRes.status);
 
-  // 11. Read Single Article
+  // get single article
   const getPostRes = await app.request(`/api/articles/${articleId}`);
-  console.log("11. Read Single Article:", getPostRes.status);
+  console.log("11. read single article:", getPostRes.status);
 
-  // 12. Update Article
+  // update article
   const updatePostRes = await app.request(`/api/articles/${articleId}`, {
     method: "PATCH",
     headers: {
@@ -123,9 +123,9 @@ async function runTests() {
       body: "Updated body content with additional tips.",
     }),
   });
-  console.log("12. Update Article:", updatePostRes.status);
+  console.log("12. update article:", updatePostRes.status);
 
-  // 13. Create Comment
+  // create comment
   const createCommentRes = await app.request(`/api/articles/${articleId}/comments`, {
     method: "POST",
     headers: {
@@ -136,19 +136,19 @@ async function runTests() {
       body: "This is a great community post!",
     }),
   });
-  console.log("13. Create Comment:", createCommentRes.status);
+  console.log("13. create comment:", createCommentRes.status);
   const commentData = await createCommentRes.json();
   const commentId = commentData.data.id;
 
-  // 14. List Comments for Article
+  // list comments on article
   const listCommentsRes = await app.request(`/api/articles/${articleId}/comments?page=1&limit=5`);
-  console.log("14. List Comments for Article:", listCommentsRes.status);
+  console.log("14. list comments for article:", listCommentsRes.status);
 
-  // 15. Read Single Comment
+  // get comment by id
   const getCommentRes = await app.request(`/api/comments/${commentId}`);
-  console.log("15. Read Single Comment:", getCommentRes.status);
+  console.log("15. read single comment:", getCommentRes.status);
 
-  // 16. Update Comment
+  // edit comment
   const updateCommentRes = await app.request(`/api/comments/${commentId}`, {
     method: "PATCH",
     headers: {
@@ -159,35 +159,35 @@ async function runTests() {
       body: "This is a great community post! (Edited by author)",
     }),
   });
-  console.log("16. Update Comment:", updateCommentRes.status);
+  console.log("16. update comment:", updateCommentRes.status);
 
-  // 17. Delete Comment
+  // delete comment
   const deleteCommentRes = await app.request(`/api/comments/${commentId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
-  console.log("17. Delete Comment:", deleteCommentRes.status);
+  console.log("17. delete comment:", deleteCommentRes.status);
 
-  // 18. Delete Article
+  // delete article
   const deletePostRes = await app.request(`/api/articles/${articleId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
-  console.log("18. Delete Article:", deletePostRes.status);
+  console.log("18. delete article:", deletePostRes.status);
 
-  // 19. Delete User Account (and cascade profiles/posts)
+  // delete account with cascade
   const deleteUserRes = await app.request("/api/users/me", {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
-  console.log("19. Delete User Account:", deleteUserRes.status);
+  console.log("19. delete user account:", deleteUserRes.status);
 
-  // 20. OpenAPI Spec & Scalar Docs
+  // check openapi spec and scalar ui
   const docRes = await app.request("/api/doc");
   const refRes = await app.request("/api/reference");
-  console.log("20. OpenAPI Spec status:", docRes.status, "| Scalar Reference UI:", refRes.status);
+  console.log("20. openapi spec:", docRes.status, "| scalar ui:", refRes.status);
 
-  console.log("=== ALL 20 TESTS PASSED WITH 100% SUCCESS! ===");
+  console.log("=== all 20 tests passed successfully! ===");
 }
 
 runTests().catch((err) => {
