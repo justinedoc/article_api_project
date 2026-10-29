@@ -12,9 +12,9 @@ import {
 } from "../utils/openapi-helpers.js";
 
 const registerSchema = z.object({
-  email: z.string().email().openapi({
+  email: z.email().openapi({
     description: "user email address",
-    example: "student@example.com",
+    example: "vivian@gmail.com",
   }),
   password: z.string().min(6).openapi({
     description: "account password (minimum 6 characters)",
@@ -22,18 +22,18 @@ const registerSchema = z.object({
   }),
   username: z.string().min(3).max(30).openapi({
     description: "unique author username",
-    example: "janedoe",
+    example: "vivi",
   }),
   displayName: z.string().optional().openapi({
     description: "public display name",
-    example: "Jane Doe",
+    example: "Agwaraonye Vivian",
   }),
 });
 
 const loginSchema = z.object({
-  email: z.string().email().openapi({
+  email: z.email().openapi({
     description: "registered email address",
-    example: "student@example.com",
+    example: "vivian@gmail.com",
   }),
   password: z.string().min(6).openapi({
     description: "account password",
@@ -59,9 +59,9 @@ export const authResponseDataSchema = z.object({
   }),
   user: z.object({
     id: z.number().int().openapi({ description: "account user id", example: 1 }),
-    email: z.email().openapi({ description: "user email", example: "student@example.com" }),
-    username: z.string().nullable().openapi({ description: "author username", example: "janedoe" }),
-    displayName: z.string().nullable().openapi({ description: "public display name", example: "Jane Doe" }),
+    email: z.email().openapi({ description: "user email", example: "vivian@gmail.com" }),
+    username: z.string().nullable().openapi({ description: "author username", example: "vivi" }),
+    displayName: z.string().nullable().openapi({ description: "public display name", example: "Agwaraonye Vivian" }),
     image: z.string().nullable().optional().openapi({ description: "avatar url", example: "https://example.com/avatar.jpg" }),
   }).openapi({ description: "authenticated user summary" }),
 });
@@ -69,8 +69,8 @@ export const authResponseDataSchema = z.object({
 export const userProfileDataSchema = z.object({
   id: z.string().openapi({ description: "profile id", example: "prof_12345678" }),
   userId: z.number().int().openapi({ description: "account user id", example: 1 }),
-  username: z.string().openapi({ description: "unique username handle", example: "janedoe" }),
-  displayName: z.string().nullable().openapi({ description: "display name", example: "Jane Doe" }),
+  username: z.string().openapi({ description: "unique username handle", example: "vivi" }),
+  displayName: z.string().nullable().openapi({ description: "display name", example: "Agwaraonye Vivian" }),
   bio: z.string().nullable().openapi({ description: "author biography", example: "Software engineer and tech blogger." }),
   image: z.string().nullable().openapi({ description: "profile avatar image url", example: "https://example.com/avatar.jpg" }),
   createdAt: z.coerce.date().openapi({ description: "profile creation timestamp", example: "2026-10-29T10:00:00.000Z" }),
@@ -79,41 +79,11 @@ export const userProfileDataSchema = z.object({
 
 export const userAccountDetailsSchema = z.object({
   id: z.number().int().openapi({ description: "user account id", example: 1 }),
-  email: z.string().email().openapi({ description: "email address", example: "student@example.com" }),
+  email: z.email().openapi({ description: "email address", example: "vivian@gmail.com" }),
   profile: userProfileDataSchema.nullable().openapi({ description: "user profile info" }),
   createdAt: z.coerce.date().openapi({ description: "account creation timestamp", example: "2026-10-29T10:00:00.000Z" }),
 });
 
-const sampleAuthUser = {
-  id: 1,
-  email: "student@example.com",
-  username: "janedoe",
-  displayName: "Jane Doe",
-  image: "https://example.com/avatar.jpg",
-};
-
-const sampleAuthData = {
-  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJzdHVkZW50QGV4YW1wbGUuY29tIn0...",
-  user: sampleAuthUser,
-};
-
-const sampleProfile = {
-  id: "prof_12345678",
-  userId: 1,
-  username: "janedoe",
-  displayName: "Jane Doe",
-  bio: "Software engineering enthusiast and open source contributor.",
-  image: "https://example.com/avatar.jpg",
-  createdAt: "2026-10-29T10:00:00.000Z",
-  updatedAt: "2026-10-29T10:00:00.000Z",
-};
-
-const sampleAccountDetails = {
-  id: 1,
-  email: "student@example.com",
-  profile: sampleProfile,
-  createdAt: "2026-10-29T10:00:00.000Z",
-};
 
 export const registerRoute = createRoute({
   method: "post",
@@ -125,7 +95,7 @@ export const registerRoute = createRoute({
   },
   responses: {
     [httpStatusCodes.CREATED]: jsonContent(
-      dataResponseSchema(authResponseDataSchema, "user registered", sampleAuthData),
+      dataResponseSchema(authResponseDataSchema, "user registered"),
       "user registered"
     ),
     ...defaultErrorResponses,
@@ -142,7 +112,7 @@ export const loginRoute = createRoute({
   },
   responses: {
     [httpStatusCodes.OK]: jsonContent(
-      dataResponseSchema(authResponseDataSchema, "logged in", sampleAuthData),
+      dataResponseSchema(authResponseDataSchema, "logged in"),
       "logged in"
     ),
     ...defaultErrorResponses,
@@ -158,7 +128,7 @@ export const meRoute = createRoute({
   middleware: [authMiddleware],
   responses: {
     [httpStatusCodes.OK]: jsonContent(
-      dataResponseSchema(userAccountDetailsSchema, "current user details", sampleAccountDetails),
+      dataResponseSchema(userAccountDetailsSchema, "current user details"),
       "current user"
     ),
     ...defaultErrorResponses,

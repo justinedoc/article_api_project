@@ -28,9 +28,9 @@ const updateCommentSchema = z.object({
 
 export const commentAuthorSchema = z.object({
   id: z.number().int().openapi({ description: "author account id", example: 1 }),
-  email: z.string().email().nullable().optional().openapi({ description: "author email", example: "janedoe@example.com" }),
-  username: z.string().nullable().openapi({ description: "author username handle", example: "janedoe" }),
-  displayName: z.string().nullable().openapi({ description: "author display name", example: "Jane Doe" }),
+  email: z.email().nullable().optional().openapi({ description: "author email", example: "vivian@gmail.com" }),
+  username: z.string().nullable().openapi({ description: "author username handle", example: "vivi" }),
+  displayName: z.string().nullable().openapi({ description: "author display name", example: "Agwaraonye Vivian" }),
   image: z.string().nullable().openapi({ description: "author avatar url", example: "https://example.com/avatar.jpg" }),
 });
 
@@ -51,8 +51,8 @@ export const commentCreatedSchema = z.object({
   updatedAt: z.coerce.date().openapi({ description: "updated timestamp", example: "2026-10-29T10:00:00.000Z" }),
   author: z.object({
     id: z.number().int().openapi({ description: "author user id", example: 1 }),
-    username: z.string().nullable().openapi({ description: "author username", example: "janedoe" }),
-    displayName: z.string().nullable().openapi({ description: "author display name", example: "Jane Doe" }),
+    username: z.string().nullable().openapi({ description: "author username", example: "vivi" }),
+    displayName: z.string().nullable().openapi({ description: "author display name", example: "Agwaraonye Vivian" }),
     image: z.string().nullable().openapi({ description: "avatar url", example: "https://example.com/avatar.jpg" }),
   }),
 });
@@ -66,47 +66,9 @@ export const commentRecordSchema = z.object({
   updatedAt: z.coerce.date().openapi({ description: "updated timestamp", example: "2026-10-29T10:00:00.000Z" }),
 });
 
-const sampleCommentItem = {
-  id: "com_12345678",
-  articleId: "art_12345678",
-  body: "This was a really helpful article!",
-  createdAt: "2026-10-29T10:00:00.000Z",
-  updatedAt: "2026-10-29T10:00:00.000Z",
-  author: {
-    id: 1,
-    email: "janedoe@example.com",
-    username: "janedoe",
-    displayName: "Jane Doe",
-    image: "https://example.com/avatar.jpg",
-  },
-};
-
-const sampleCommentCreated = {
-  id: "com_12345678",
-  articleId: "art_12345678",
-  body: "This was a really helpful article!",
-  createdAt: "2026-10-29T10:00:00.000Z",
-  updatedAt: "2026-10-29T10:00:00.000Z",
-  author: {
-    id: 1,
-    username: "janedoe",
-    displayName: "Jane Doe",
-    image: "https://example.com/avatar.jpg",
-  },
-};
-
-const sampleCommentRecord = {
-  id: "com_12345678",
-  articleId: "art_12345678",
-  authorId: 1,
-  body: "Updated comment text with more context.",
-  createdAt: "2026-10-29T10:00:00.000Z",
-  updatedAt: "2026-10-29T10:00:00.000Z",
-};
-
 export const createCommentRoute = createRoute({
   method: "post",
-  path: "/articles/:articleId/comments",
+  path: "/articles/{articleId}/comments",
   tags: ["Comments"],
   summary: "create comment",
   security: [{ BearerAuth: [] }],
@@ -123,7 +85,7 @@ export const createCommentRoute = createRoute({
   },
   responses: {
     [httpStatusCodes.CREATED]: jsonContent(
-      dataResponseSchema(commentCreatedSchema, "comment created successfully", sampleCommentCreated),
+      dataResponseSchema(commentCreatedSchema, "comment created successfully"),
       "comment created"
     ),
     ...defaultErrorResponses,
@@ -132,7 +94,7 @@ export const createCommentRoute = createRoute({
 
 export const listCommentsRoute = createRoute({
   method: "get",
-  path: "/articles/:articleId/comments",
+  path: "/articles/{articleId}/comments",
   tags: ["Comments"],
   summary: "list comments",
   request: {
@@ -147,12 +109,7 @@ export const listCommentsRoute = createRoute({
   },
   responses: {
     [httpStatusCodes.OK]: jsonContent(
-      paginatedResponseSchema(commentItemSchema, "comments retrieved", [sampleCommentItem], {
-        page: 1,
-        limit: 10,
-        total: 1,
-        totalPages: 1,
-      }),
+      paginatedResponseSchema(commentItemSchema, "comments retrieved"),
       "comments list"
     ),
     ...defaultErrorResponses,
@@ -161,7 +118,7 @@ export const listCommentsRoute = createRoute({
 
 export const getCommentByIdRoute = createRoute({
   method: "get",
-  path: "/comments/:commentId",
+  path: "/comments/{commentId}",
   tags: ["Comments"],
   summary: "get comment",
   request: {
@@ -175,7 +132,7 @@ export const getCommentByIdRoute = createRoute({
   },
   responses: {
     [httpStatusCodes.OK]: jsonContent(
-      dataResponseSchema(commentItemSchema, "comment retrieved", sampleCommentItem),
+      dataResponseSchema(commentItemSchema, "comment retrieved"),
       "comment details"
     ),
     ...defaultErrorResponses,
@@ -184,7 +141,7 @@ export const getCommentByIdRoute = createRoute({
 
 export const updateCommentRoute = createRoute({
   method: "patch",
-  path: "/comments/:commentId",
+  path: "/comments/{commentId}",
   tags: ["Comments"],
   summary: "update comment",
   security: [{ BearerAuth: [] }],
@@ -201,7 +158,7 @@ export const updateCommentRoute = createRoute({
   },
   responses: {
     [httpStatusCodes.OK]: jsonContent(
-      dataResponseSchema(commentRecordSchema, "comment updated successfully", sampleCommentRecord),
+      dataResponseSchema(commentRecordSchema, "comment updated successfully"),
       "comment updated"
     ),
     ...defaultErrorResponses,
@@ -210,7 +167,7 @@ export const updateCommentRoute = createRoute({
 
 export const deleteCommentRoute = createRoute({
   method: "delete",
-  path: "/comments/:commentId",
+  path: "/comments/{commentId}",
   tags: ["Comments"],
   summary: "delete comment",
   security: [{ BearerAuth: [] }],

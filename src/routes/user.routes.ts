@@ -15,7 +15,7 @@ import {
 const updateProfileSchema = z.object({
   displayName: z.string().min(2).max(50).optional().openapi({
     description: "public display name",
-    example: "Jane Smith",
+    example: "Vivian Agwaraonye",
   }),
   bio: z.string().max(500).optional().nullable().openapi({
     description: "biography or about me text",
@@ -27,15 +27,15 @@ const updateProfileSchema = z.object({
   }),
   username: z.string().min(3).max(30).optional().openapi({
     description: "unique handle",
-    example: "janesmith",
+    example: "vivi",
   }),
 });
 
 export const publicProfileSchema = z.object({
   id: z.string().openapi({ description: "profile unique id", example: "prof_12345678" }),
   userId: z.number().int().openapi({ description: "account user id", example: 1 }),
-  username: z.string().openapi({ description: "unique username handle", example: "janedoe" }),
-  displayName: z.string().nullable().openapi({ description: "public display name", example: "Jane Doe" }),
+  username: z.string().openapi({ description: "unique username handle", example: "vivi" }),
+  displayName: z.string().nullable().openapi({ description: "public display name", example: "Agwaraonye Vivian" }),
   bio: z.string().nullable().openapi({ description: "author bio", example: "Software engineer and tech blogger." }),
   image: z.string().nullable().openapi({ description: "avatar image url", example: "https://example.com/avatar.jpg" }),
   createdAt: z.coerce.date().openapi({ description: "profile creation date", example: "2026-10-29T10:00:00.000Z" }),
@@ -45,8 +45,8 @@ export const publicProfileSchema = z.object({
 export const userSummaryItemSchema = z.object({
   id: z.string().openapi({ description: "profile id", example: "prof_12345678" }),
   userId: z.number().int().openapi({ description: "account user id", example: 1 }),
-  username: z.string().openapi({ description: "username", example: "janedoe" }),
-  displayName: z.string().nullable().openapi({ description: "display name", example: "Jane Doe" }),
+  username: z.string().openapi({ description: "username", example: "vivi" }),
+  displayName: z.string().nullable().openapi({ description: "display name", example: "Agwaraonye Vivian" }),
   bio: z.string().nullable().openapi({ description: "bio", example: "Fullstack developer and open source writer." }),
   image: z.string().nullable().openapi({ description: "avatar url", example: "https://example.com/avatar.jpg" }),
   createdAt: z.coerce.date().openapi({ description: "created date", example: "2026-10-29T10:00:00.000Z" }),
@@ -54,7 +54,7 @@ export const userSummaryItemSchema = z.object({
 
 export const userAccountDetailsSchema = z.object({
   id: z.number().int().openapi({ description: "account id", example: 1 }),
-  email: z.string().email().openapi({ description: "email address", example: "student@example.com" }),
+  email: z.email().openapi({ description: "email address", example: "vivian@gmail.com" }),
   profile: publicProfileSchema.nullable().openapi({ description: "profile information" }),
   createdAt: z.coerce.date().openapi({ description: "account creation date", example: "2026-10-29T10:00:00.000Z" }),
 });
@@ -64,71 +64,21 @@ export const authorArticleItemSchema = z.object({
   title: z.string().openapi({ description: "article title", example: "Building Web APIs with Hono" }),
   slug: z.string().openapi({ description: "url slug", example: "building-web-apis-with-hono-k892x" }),
   excerpt: z.string().nullable().openapi({ description: "short summary", example: "A beginner friendly guide to Hono." }),
-  body: z.string().openapi({ description: "article content", example: "Full article body explaining routing, controllers, and SQLite..." }),
+  body: z.string().openapi({ description: "article content", example: "Full article body" }),
   createdAt: z.coerce.date().openapi({ description: "creation date", example: "2026-10-29T10:00:00.000Z" }),
   updatedAt: z.coerce.date().openapi({ description: "updated date", example: "2026-10-29T10:00:00.000Z" }),
   author: z.object({
     id: z.number().int().openapi({ description: "author id", example: 1 }),
-    username: z.string().openapi({ description: "author username", example: "janedoe" }),
-    displayName: z.string().nullable().openapi({ description: "display name", example: "Jane Doe" }),
+    username: z.string().openapi({ description: "author username", example: "vivi" }),
+    displayName: z.string().nullable().openapi({ description: "display name", example: "Agwaraonye Vivian" }),
     image: z.string().nullable().openapi({ description: "avatar url", example: "https://example.com/avatar.jpg" }),
   }),
 });
-
-const sampleProfile = {
-  id: "prof_12345678",
-  userId: 1,
-  username: "janedoe",
-  displayName: "Jane Doe",
-  bio: "Software engineer and tech blogger.",
-  image: "https://example.com/avatar.jpg",
-  createdAt: "2026-10-29T10:00:00.000Z",
-  updatedAt: "2026-10-29T10:00:00.000Z",
-};
-
-const sampleUserSummaryList = [
-  sampleProfile,
-  {
-    id: "prof_87654321",
-    userId: 2,
-    username: "johnsmith",
-    displayName: "John Smith",
-    bio: "Frontend specialist and writer.",
-    image: "https://example.com/john.jpg",
-    createdAt: "2026-10-29T11:00:00.000Z",
-  },
-];
-
-const sampleAccountDetails = {
-  id: 1,
-  email: "student@example.com",
-  profile: sampleProfile,
-  createdAt: "2026-10-29T10:00:00.000Z",
-};
-
-const sampleAuthorArticles = [
-  {
-    id: "art_12345678",
-    title: "Building Web APIs with Hono",
-    slug: "building-web-apis-with-hono-k892x",
-    excerpt: "A beginner friendly guide to Hono.",
-    body: "Full article body explaining routing, controllers, and SQLite...",
-    createdAt: "2026-10-29T10:00:00.000Z",
-    updatedAt: "2026-10-29T10:00:00.000Z",
-    author: {
-      id: 1,
-      username: "janedoe",
-      displayName: "Jane Doe",
-      image: "https://example.com/avatar.jpg",
-    },
-  },
-];
 
 const listUsersQuerySchema = paginationQuerySchema.extend({
   search: z.string().optional().openapi({
     param: { name: "search", in: "query" },
     description: "search username",
-    example: "jane",
   }),
 });
 
@@ -142,12 +92,7 @@ export const getUsersRoute = createRoute({
   },
   responses: {
     [httpStatusCodes.OK]: jsonContent(
-      paginatedResponseSchema(userSummaryItemSchema, "users list", sampleUserSummaryList, {
-        page: 1,
-        limit: 10,
-        total: 2,
-        totalPages: 1,
-      }),
+      paginatedResponseSchema(userSummaryItemSchema, "users list"),
       "users list"
     ),
     ...defaultErrorResponses,
@@ -163,7 +108,7 @@ export const getMeRoute = createRoute({
   middleware: [authMiddleware],
   responses: {
     [httpStatusCodes.OK]: jsonContent(
-      dataResponseSchema(userAccountDetailsSchema, "current user account", sampleAccountDetails),
+      dataResponseSchema(userAccountDetailsSchema, "current user account"),
       "profile details"
     ),
     ...defaultErrorResponses,
@@ -182,7 +127,7 @@ export const updateProfileRoute = createRoute({
   },
   responses: {
     [httpStatusCodes.OK]: jsonContent(
-      dataResponseSchema(publicProfileSchema, "profile updated", sampleProfile),
+      dataResponseSchema(publicProfileSchema, "profile updated"),
       "profile updated"
     ),
     ...defaultErrorResponses,
@@ -207,7 +152,7 @@ export const deleteAccountRoute = createRoute({
 
 export const getUserArticlesRoute = createRoute({
   method: "get",
-  path: "/:username/articles",
+  path: "/{username}/articles",
   tags: ["Users"],
   summary: "get author articles",
   request: {
@@ -215,19 +160,14 @@ export const getUserArticlesRoute = createRoute({
       username: z.string().openapi({
         param: { name: "username", in: "path" },
         description: "author username handle",
-        example: "janedoe",
+        example: "vivi",
       }),
     }),
     query: paginationQuerySchema,
   },
   responses: {
     [httpStatusCodes.OK]: jsonContent(
-      paginatedResponseSchema(authorArticleItemSchema, "author articles", sampleAuthorArticles, {
-        page: 1,
-        limit: 10,
-        total: 1,
-        totalPages: 1,
-      }),
+      paginatedResponseSchema(authorArticleItemSchema, "author articles"),
       "author articles"
     ),
     ...defaultErrorResponses,
@@ -236,7 +176,7 @@ export const getUserArticlesRoute = createRoute({
 
 export const getProfileRoute = createRoute({
   method: "get",
-  path: "/:username",
+  path: "/{username}",
   tags: ["Users"],
   summary: "get user profile",
   request: {
@@ -244,13 +184,13 @@ export const getProfileRoute = createRoute({
       username: z.string().openapi({
         param: { name: "username", in: "path" },
         description: "author username handle",
-        example: "janedoe",
+        example: "vivi",
       }),
     }),
   },
   responses: {
     [httpStatusCodes.OK]: jsonContent(
-      dataResponseSchema(publicProfileSchema, "profile found", sampleProfile),
+      dataResponseSchema(publicProfileSchema, "profile found"),
       "profile found"
     ),
     ...defaultErrorResponses,

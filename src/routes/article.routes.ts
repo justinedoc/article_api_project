@@ -44,9 +44,9 @@ const updateArticleSchema = z.object({
 
 export const articleAuthorSchema = z.object({
   id: z.number().int().openapi({ description: "author account id", example: 1 }),
-  email: z.string().email().openapi({ description: "author email", example: "janedoe@example.com" }),
-  username: z.string().nullable().openapi({ description: "author username handle", example: "janedoe" }),
-  displayName: z.string().nullable().openapi({ description: "author display name", example: "Jane Doe" }),
+  email: z.email().openapi({ description: "author email", example: "vivian@gmail.com" }),
+  username: z.string().nullable().openapi({ description: "author username handle", example: "vivian" }),
+  displayName: z.string().nullable().openapi({ description: "author display name", example: "Agwaraonye Vivian" }),
   image: z.string().nullable().openapi({ description: "author avatar url", example: "https://example.com/avatar.jpg" }),
 });
 
@@ -82,49 +82,10 @@ export const articleRecordSchema = z.object({
   updatedAt: z.coerce.date().openapi({ description: "updated date", example: "2026-10-29T10:00:00.000Z" }),
 });
 
-const sampleArticleItem = {
-  id: "art_12345678",
-  title: "Getting Started with Node SQLite",
-  slug: "getting-started-with-node-sqlite-x92a1",
-  excerpt: "A simple introduction to SQLite with Hono.",
-  body: "Here is the full article content explaining how to use SQLite with Node.js and Hono...",
-  createdAt: "2026-10-29T10:00:00.000Z",
-  updatedAt: "2026-10-29T10:00:00.000Z",
-  author: {
-    id: 1,
-    email: "janedoe@example.com",
-    username: "janedoe",
-    displayName: "Jane Doe",
-    image: "https://example.com/avatar.jpg",
-  },
-};
-
-const sampleArticleRecord = {
-  id: "art_12345678",
-  authorId: 1,
-  title: "Getting Started with Node SQLite",
-  slug: "getting-started-with-node-sqlite-x92a1",
-  excerpt: "A simple introduction to SQLite with Hono.",
-  body: "Here is the full article content explaining how to use SQLite with Node.js and Hono...",
-  createdAt: "2026-10-29T10:00:00.000Z",
-  updatedAt: "2026-10-29T10:00:00.000Z",
-};
-
-const sampleMyArticle = {
-  id: "art_12345678",
-  title: "Getting Started with Node SQLite",
-  slug: "getting-started-with-node-sqlite-x92a1",
-  excerpt: "A simple introduction to SQLite with Hono.",
-  body: "Here is the full article content explaining how to use SQLite with Node.js and Hono...",
-  createdAt: "2026-10-29T10:00:00.000Z",
-  updatedAt: "2026-10-29T10:00:00.000Z",
-};
-
 const listArticlesQuerySchema = paginationQuerySchema.extend({
   search: z.string().optional().openapi({
     param: { name: "search", in: "query" },
     description: "search filter by article title",
-    example: "SQLite",
   }),
 });
 
@@ -140,12 +101,7 @@ export const getMyArticlesRoute = createRoute({
   },
   responses: {
     [httpStatusCodes.OK]: jsonContent(
-      paginatedResponseSchema(myArticleItemSchema, "my articles retrieved", [sampleMyArticle], {
-        page: 1,
-        limit: 10,
-        total: 1,
-        totalPages: 1,
-      }),
+      paginatedResponseSchema(myArticleItemSchema, "my articles retrieved"),
       "my articles"
     ),
     ...defaultErrorResponses,
@@ -164,7 +120,7 @@ export const createArticleRoute = createRoute({
   },
   responses: {
     [httpStatusCodes.CREATED]: jsonContent(
-      dataResponseSchema(articleRecordSchema, "article created successfully", sampleArticleRecord),
+      dataResponseSchema(articleRecordSchema, "article created successfully"),
       "article created"
     ),
     ...defaultErrorResponses,
@@ -181,12 +137,7 @@ export const listArticlesRoute = createRoute({
   },
   responses: {
     [httpStatusCodes.OK]: jsonContent(
-      paginatedResponseSchema(articleItemSchema, "articles retrieved", [sampleArticleItem], {
-        page: 1,
-        limit: 10,
-        total: 1,
-        totalPages: 1,
-      }),
+      paginatedResponseSchema(articleItemSchema, "articles retrieved"),
       "articles list"
     ),
     ...defaultErrorResponses,
@@ -195,7 +146,7 @@ export const listArticlesRoute = createRoute({
 
 export const getArticleRoute = createRoute({
   method: "get",
-  path: "/:id",
+  path: "/{id}",
   tags: ["Articles"],
   summary: "get article",
   request: {
@@ -209,7 +160,7 @@ export const getArticleRoute = createRoute({
   },
   responses: {
     [httpStatusCodes.OK]: jsonContent(
-      dataResponseSchema(articleItemSchema, "article retrieved", sampleArticleItem),
+      dataResponseSchema(articleItemSchema, "article retrieved"),
       "article details"
     ),
     ...defaultErrorResponses,
@@ -218,7 +169,7 @@ export const getArticleRoute = createRoute({
 
 export const updateArticleRoute = createRoute({
   method: "patch",
-  path: "/:id",
+  path: "/{id}",
   tags: ["Articles"],
   summary: "update article",
   security: [{ BearerAuth: [] }],
@@ -235,7 +186,7 @@ export const updateArticleRoute = createRoute({
   },
   responses: {
     [httpStatusCodes.OK]: jsonContent(
-      dataResponseSchema(articleRecordSchema, "article updated successfully", sampleArticleRecord),
+      dataResponseSchema(articleRecordSchema, "article updated successfully"),
       "article updated"
     ),
     ...defaultErrorResponses,
@@ -244,7 +195,7 @@ export const updateArticleRoute = createRoute({
 
 export const deleteArticleRoute = createRoute({
   method: "delete",
-  path: "/:id",
+  path: "/{id}",
   tags: ["Articles"],
   summary: "delete article",
   security: [{ BearerAuth: [] }],
