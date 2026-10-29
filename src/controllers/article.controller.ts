@@ -33,6 +33,22 @@ export class ArticleController {
     );
   }
 
+  static async getMyArticles(c: Context) {
+    const user = c.get("user") as AuthUser;
+    const page = Number(c.req.query("page")) || 1;
+    const limit = Number(c.req.query("limit")) || 10;
+
+    const result = await ArticleService.getMyArticles(user.id, { page, limit });
+    return c.json(
+      {
+        success: true,
+        message: "My articles retrieved successfully",
+        ...result,
+      },
+      200
+    );
+  }
+
   static async getArticleById(c: Context) {
     const id = c.req.param("id")!;
     const result = await ArticleService.getArticleById(id);

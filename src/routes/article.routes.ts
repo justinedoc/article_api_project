@@ -33,7 +33,7 @@ const articleItemSchema = z.object({
   updatedAt: z.any(),
   author: z.object({
     id: z.number(),
-    email: z.string(),
+    email: z.string().optional(),
     username: z.string().nullable(),
     displayName: z.string().nullable(),
     image: z.string().nullable(),
@@ -45,6 +45,30 @@ const listArticlesQuerySchema = paginationQuerySchema.extend({
     description: "Search filter by article title",
     example: "SQLite",
   }),
+});
+
+const getMyArticlesRoute = createRoute({
+  method: "get",
+  path: "/me",
+  tags: ["Articles"],
+  summary: "List all articles authored by the current authenticated user",
+  security: [{ BearerAuth: [] }],
+  middleware: [authMiddleware],
+  request: {
+    query: paginationQuerySchema,
+  },
+  responses: {
+    200: jsonContent(
+      z.object({
+        success: z.boolean(),
+        message: z.string(),
+        data: z.array(z.any()),
+        pagination: z.any(),
+      }),
+      "My articles retrieved"
+    ),
+    ...defaultErrorResponses,
+  },
 });
 
 const createArticleRoute = createRoute({
@@ -160,6 +184,7 @@ const deleteArticleRoute = createRoute({
   },
 });
 
+articleRouter.openapi(getMyArticlesRoute, ArticleController.getMyArticles as any);
 articleRouter.openapi(createArticleRoute, ArticleController.createArticle as any);
 articleRouter.openapi(listArticlesRoute, ArticleController.getArticles as any);
 articleRouter.openapi(getArticleRoute, ArticleController.getArticleById as any);

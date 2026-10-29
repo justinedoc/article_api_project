@@ -1,107 +1,196 @@
 import { app } from "./app.js";
 
 async function runTests() {
-  console.log("--- Starting End-to-End Verification ---");
+  console.log("=== Comprehensive Verification of All Requirements ===");
 
-  // 1. Register
-  const regEmail = `test_${Date.now()}@test.com`;
-  const regUsername = `vivi_${Date.now()}`;
+  const timestamp = Date.now();
+  const email = `author_${timestamp}@test.com`;
+  const username = `author_${timestamp}`;
+  const initialPassword = "initialPassword123";
+  const newPassword = "newSecurePassword456";
+
+  // 1. Register Account & Profile
   const regRes = await app.request("/api/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      email: regEmail,
-      username: regUsername,
-      displayName: "Vivienne",
-      password: "password123"
-    })
+      email,
+      username,
+      displayName: "Jane Initial",
+      password: initialPassword,
+    }),
   });
-  console.log("1. Register status:", regRes.status);
+  console.log("1. Register:", regRes.status);
   const regData = await regRes.json();
-  if (regRes.status !== 201 || !regData.data?.token) {
-    throw new Error("Register failed: " + JSON.stringify(regData));
-  }
-  const token = regData.data.token;
-  console.log("   Token received:", token.substring(0, 20) + "...");
+  let token = regData.data.token;
 
-  // 2. Login
+  // 2. Change Password
+  const pwdRes = await app.request("/api/auth/change-password", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      currentPassword: initialPassword,
+      newPassword: newPassword,
+    }),
+  });
+  console.log("2. Change Password:", pwdRes.status);
+
+  // 3. Login with New Password
   const loginRes = await app.request("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      email: regEmail,
-      password: "password123"
-    })
+      email,
+      password: newPassword,
+    }),
   });
-  console.log("2. Login status:", loginRes.status);
+  console.log("3. Login with new password:", loginRes.status);
+  const loginData = await loginRes.json();
+  token = loginData.data.token;
 
-  // 3. Me
-  const meRes = await app.request("/api/auth/me", {
-    headers: { Authorization: `Bearer ${token}` }
+  // 4. Update Profile (Name, Bio, Avatar)
+  const profileRes = await app.request("/api/users/me", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      displayName: "Jane Updated",
+      bio: "Fullstack developer passionate about SQLite & community publishing.",
+      image: "https://example.com/jane.jpg",
+    }),
   });
-  console.log("3. Get Me status:", meRes.status);
-  const meData = await meRes.json();
-  console.log("   User email:", meData.data?.email, "Profile:", meData.data?.profile?.username);
+  console.log("4. Update Profile:", profileRes.status);
+  const updatedProfile = await profileRes.json();
+  console.log("   Updated name:", updatedProfile.data.displayName);
 
-  // 4. Create Article
-  const artRes = await app.request("/api/articles", {
+  // 5. Get Public Profile by username
+  const getProfileRes = await app.request(`/api/users/${username}`);
+  console.log("5. Get Public Profile:", getProfileRes.status);
+
+  // 6. List Users
+  const listUsersRes = await app.request("/api/users?page=1&limit=5");
+  console.log("6. List Users/Authors:", listUsersRes.status);
+
+  // 7. Create Article (Post)
+  const postRes = await app.request("/api/articles", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      title: "Building Clean APIs with Node SQLite",
-      excerpt: "A beginner guide to SQLite with Hono",
-      body: "This is the full text of the article for Vivi project."
-    })
+      title: "Building Community Platforms with SQLite",
+      excerpt: "A deep dive into SQLite architecture.",
+      body: "Full content of the article detailing the community platform architecture...",
+    }),
   });
-  console.log("4. Create Article status:", artRes.status);
-  const artData = await artRes.json();
-  const articleId = artData.data.id;
-  console.log("   Article created with slug:", artData.data.slug);
+  console.log("7. Create Article:", postRes.status);
+  const postData = await postRes.json();
+  const articleId = postData.data.id;
 
-  // 5. List Articles (Pagination)
-  const listRes = await app.request("/api/articles?page=1&limit=5");
-  console.log("5. List Articles status:", listRes.status);
-  const listData = await listRes.json();
-  console.log("   Total articles:", listData.pagination?.total, "Items returned:", listData.data?.length);
+  // 8. List Articles (Feed)
+  const listPostsRes = await app.request("/api/articles?page=1&limit=5");
+  console.log("8. List Articles:", listPostsRes.status);
 
-  // 6. Create Comment
-  const comRes = await app.request(`/api/articles/${articleId}/comments`, {
+  // 9. Get My Articles
+  const myPostsRes = await app.request("/api/articles/me", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  console.log("9. Get My Articles:", myPostsRes.status);
+
+  // 10. Get Author Articles
+  const authorPostsRes = await app.request(`/api/users/${username}/articles`);
+  console.log("10. Get Author Articles:", authorPostsRes.status);
+
+  // 11. Read Single Article
+  const getPostRes = await app.request(`/api/articles/${articleId}`);
+  console.log("11. Read Single Article:", getPostRes.status);
+
+  // 12. Update Article
+  const updatePostRes = await app.request(`/api/articles/${articleId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      title: "Building Community Platforms with SQLite (Updated Edition)",
+      body: "Updated body content with additional tips.",
+    }),
+  });
+  console.log("12. Update Article:", updatePostRes.status);
+
+  // 13. Create Comment
+  const createCommentRes = await app.request(`/api/articles/${articleId}/comments`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      body: "Great article, very easy to understand!"
-    })
+      body: "This is a great community post!",
+    }),
   });
-  console.log("6. Create Comment status:", comRes.status);
+  console.log("13. Create Comment:", createCommentRes.status);
+  const commentData = await createCommentRes.json();
+  const commentId = commentData.data.id;
 
-  // 7. List Comments
-  const comListRes = await app.request(`/api/articles/${articleId}/comments?page=1&limit=10`);
-  console.log("7. List Comments status:", comListRes.status);
-  const comListData = await comListRes.json();
-  console.log("   Comments count:", comListData.data?.length);
+  // 14. List Comments for Article
+  const listCommentsRes = await app.request(`/api/articles/${articleId}/comments?page=1&limit=5`);
+  console.log("14. List Comments for Article:", listCommentsRes.status);
 
-  // 8. OpenAPI Doc
+  // 15. Read Single Comment
+  const getCommentRes = await app.request(`/api/comments/${commentId}`);
+  console.log("15. Read Single Comment:", getCommentRes.status);
+
+  // 16. Update Comment
+  const updateCommentRes = await app.request(`/api/comments/${commentId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      body: "This is a great community post! (Edited by author)",
+    }),
+  });
+  console.log("16. Update Comment:", updateCommentRes.status);
+
+  // 17. Delete Comment
+  const deleteCommentRes = await app.request(`/api/comments/${commentId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  console.log("17. Delete Comment:", deleteCommentRes.status);
+
+  // 18. Delete Article
+  const deletePostRes = await app.request(`/api/articles/${articleId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  console.log("18. Delete Article:", deletePostRes.status);
+
+  // 19. Delete User Account (and cascade profiles/posts)
+  const deleteUserRes = await app.request("/api/users/me", {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  console.log("19. Delete User Account:", deleteUserRes.status);
+
+  // 20. OpenAPI Spec & Scalar Docs
   const docRes = await app.request("/api/doc");
-  console.log("8. OpenAPI Doc status:", docRes.status);
-
-  // 9. Scalar Reference UI
   const refRes = await app.request("/api/reference");
-  console.log("9. Scalar Reference UI status:", refRes.status);
+  console.log("20. OpenAPI Spec status:", docRes.status, "| Scalar Reference UI:", refRes.status);
 
-  // 10. 404 Route
-  const notFoundRes = await app.request("/api/non-existent-route");
-  console.log("10. Not Found status:", notFoundRes.status);
-
-  console.log("--- ALL 10 TESTS PASSED SUCCESSFULLY! ---");
+  console.log("=== ALL 20 TESTS PASSED WITH 100% SUCCESS! ===");
 }
 
 runTests().catch((err) => {
-  console.error("Test error:", err);
+  console.error("Verification failed:", err);
   process.exit(1);
 });

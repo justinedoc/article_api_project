@@ -143,4 +143,33 @@ export class AuthService {
       createdAt: account.createdAt,
     };
   }
+
+  static async changePassword(
+    userId: number,
+    data: { currentPassword: string; newPassword: string }
+  ) {
+    const [account] = await db
+      .select()
+      .from(accounts)
+      .where(eq(accounts.id, userId))
+      .limit(1);
+
+    if (!account) {
+      throw ApiError.notFound("Account not found");
+    }
+
+    const isPasswordValid = await bcrypt.compare(data.currentPassword, account.password);
+    if (!isPasswordValid) {
+      throw ApiError.badRequest("Current password is incorrect");
+    }
+
+    const newHashedPassword = await bcrypt.hash(data.newPassword, 10);
+
+    await db
+      .update(accounts)
+      .set({ password: newHashedPassword })
+      .where(eq(accounts.id, userId));
+
+    return { success: true, message: "Password updated successfully" };
+  }
 }

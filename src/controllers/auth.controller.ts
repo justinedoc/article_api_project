@@ -1,5 +1,6 @@
 import type { Context } from "hono";
 import { AuthService } from "../services/auth.service.js";
+import type { AuthUser } from "../types.js";
 
 export class AuthController {
   static async register(c: Context) {
@@ -29,7 +30,7 @@ export class AuthController {
   }
 
   static async getMe(c: Context) {
-    const user = c.get("user");
+    const user = c.get("user") as AuthUser;
     const result = await AuthService.getMe(user.id);
     return c.json(
       {
@@ -39,5 +40,12 @@ export class AuthController {
       },
       200
     );
+  }
+
+  static async changePassword(c: Context) {
+    const user = c.get("user") as AuthUser;
+    const body = await c.req.json();
+    const result = await AuthService.changePassword(user.id, body);
+    return c.json(result, 200);
   }
 }

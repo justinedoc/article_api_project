@@ -76,6 +76,39 @@ export class ArticleService {
     return createPaginatedResponse(rows, total, page, limit);
   }
 
+  static async getMyArticles(
+    authorId: number,
+    params: { page: number; limit: number }
+  ) {
+    const { page, limit } = params;
+    const offset = (page - 1) * limit;
+
+    const [countResult] = await db
+      .select({ total: count() })
+      .from(articles)
+      .where(eq(articles.authorId, authorId));
+
+    const total = Number(countResult?.total || 0);
+
+    const rows = await db
+      .select({
+        id: articles.id,
+        title: articles.title,
+        slug: articles.slug,
+        excerpt: articles.excerpt,
+        body: articles.body,
+        createdAt: articles.createdAt,
+        updatedAt: articles.updatedAt,
+      })
+      .from(articles)
+      .where(eq(articles.authorId, authorId))
+      .orderBy(desc(articles.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return createPaginatedResponse(rows, total, page, limit);
+  }
+
   static async getArticleById(idOrSlug: string) {
     const [article] = await db
       .select({

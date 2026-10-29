@@ -96,6 +96,59 @@ export class CommentService {
     return createPaginatedResponse(rows, total, page, limit);
   }
 
+  static async getCommentById(commentId: string) {
+    const [comment] = await db
+      .select({
+        id: comments.id,
+        articleId: comments.articleId,
+        body: comments.body,
+        createdAt: comments.createdAt,
+        updatedAt: comments.updatedAt,
+        author: {
+          id: accounts.id,
+          email: accounts.email,
+          username: profiles.username,
+          displayName: profiles.displayName,
+          image: profiles.image,
+        },
+      })
+      .from(comments)
+      .leftJoin(accounts, eq(comments.authorId, accounts.id))
+      .leftJoin(profiles, eq(accounts.id, profiles.userId))
+      .where(eq(comments.id, commentId))
+      .limit(1);
+
+    if (!comment) {
+      throw ApiError.notFound("Comment not found");
+    }
+
+    return comment;
+  }
+
+  static async updateComment(commentId: string, authorId: number, body: string) {
+    const [comment] = await db
+      .select()
+      .from(comments)
+      .where(eq(comments.id, commentId))
+      .limit(1);
+
+    if (!comment) {
+      throw ApiError.notFound("Comment not found");
+    }
+
+    if (comment.authorId !== authorId) {
+      throw ApiError.forbidden("You do not have permission to edit this comment");
+    }
+
+    const [updated] = await db
+      .update(comments)
+      .set({ body })
+      .where(eq(comments.id, commentId))
+      .returning();
+
+    return updated;
+  }
+
   static async deleteComment(commentId: string, authorId: number) {
     const [comment] = await db
       .select()

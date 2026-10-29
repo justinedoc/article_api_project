@@ -15,6 +15,10 @@ const createCommentSchema = z.object({
   body: z.string().min(1).openapi({ example: "This was a really helpful article!" }),
 });
 
+const updateCommentSchema = z.object({
+  body: z.string().min(1).openapi({ example: "Updated comment text." }),
+});
+
 const commentItemSchema = z.object({
   id: z.string(),
   articleId: z.string(),
@@ -86,6 +90,55 @@ const listCommentsRoute = createRoute({
   },
 });
 
+const getCommentByIdRoute = createRoute({
+  method: "get",
+  path: "/comments/:commentId",
+  tags: ["Comments"],
+  summary: "Get a single comment by ID",
+  request: {
+    params: z.object({
+      commentId: z.string(),
+    }),
+  },
+  responses: {
+    200: jsonContent(
+      z.object({
+        success: z.boolean(),
+        message: z.string(),
+        data: commentItemSchema,
+      }),
+      "Comment retrieved"
+    ),
+    ...defaultErrorResponses,
+  },
+});
+
+const updateCommentRoute = createRoute({
+  method: "patch",
+  path: "/comments/:commentId",
+  tags: ["Comments"],
+  summary: "Update a comment by ID (author only)",
+  security: [{ BearerAuth: [] }],
+  middleware: [authMiddleware],
+  request: {
+    params: z.object({
+      commentId: z.string(),
+    }),
+    body: jsonContentRequired(updateCommentSchema, "Updated comment payload"),
+  },
+  responses: {
+    200: jsonContent(
+      z.object({
+        success: z.boolean(),
+        message: z.string(),
+        data: z.any(),
+      }),
+      "Comment updated successfully"
+    ),
+    ...defaultErrorResponses,
+  },
+});
+
 const deleteCommentRoute = createRoute({
   method: "delete",
   path: "/comments/:commentId",
@@ -106,4 +159,6 @@ const deleteCommentRoute = createRoute({
 
 commentRouter.openapi(createCommentRoute, CommentController.createComment as any);
 commentRouter.openapi(listCommentsRoute, CommentController.getComments as any);
+commentRouter.openapi(getCommentByIdRoute, CommentController.getCommentById as any);
+commentRouter.openapi(updateCommentRoute, CommentController.updateComment as any);
 commentRouter.openapi(deleteCommentRoute, CommentController.deleteComment as any);

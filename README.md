@@ -1,4 +1,4 @@
-# Article API (Vivi's Project)
+# Article API
 
 A clean, beginner-friendly REST API for managing users, articles, and discussion comments. Built with **Hono**, **Node SQLite** (`node:sqlite`), **Drizzle ORM**, and **Scalar OpenAPI Reference**.
 

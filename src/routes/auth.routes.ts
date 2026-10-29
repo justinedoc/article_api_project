@@ -5,6 +5,7 @@ import {
   defaultErrorResponses,
   jsonContent,
   jsonContentRequired,
+  messageSchema,
 } from "../utils/openapi-helpers.js";
 
 export const authRouter = new OpenAPIHono();
@@ -19,6 +20,11 @@ const registerSchema = z.object({
 const loginSchema = z.object({
   email: z.string().email().openapi({ example: "student@example.com" }),
   password: z.string().min(6).openapi({ example: "secret123" }),
+});
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(6).openapi({ example: "secret123" }),
+  newPassword: z.string().min(6).openapi({ example: "newSecret456" }),
 });
 
 const authResponseSchema = z.object({
@@ -84,6 +90,23 @@ const meRoute = createRoute({
   },
 });
 
+const changePasswordRoute = createRoute({
+  method: "patch",
+  path: "/change-password",
+  tags: ["Authentication"],
+  summary: "Change account password",
+  security: [{ BearerAuth: [] }],
+  middleware: [authMiddleware],
+  request: {
+    body: jsonContentRequired(changePasswordSchema, "Password change payload"),
+  },
+  responses: {
+    200: jsonContent(messageSchema("Password updated successfully"), "Password changed"),
+    ...defaultErrorResponses,
+  },
+});
+
 authRouter.openapi(registerRoute, AuthController.register as any);
 authRouter.openapi(loginRoute, AuthController.login as any);
 authRouter.openapi(meRoute, AuthController.getMe as any);
+authRouter.openapi(changePasswordRoute, AuthController.changePassword as any);

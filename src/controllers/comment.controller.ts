@@ -35,6 +35,35 @@ export class CommentController {
     );
   }
 
+  static async getCommentById(c: Context) {
+    const commentId = c.req.param("commentId")!;
+    const result = await CommentService.getCommentById(commentId);
+    return c.json(
+      {
+        success: true,
+        message: "Comment retrieved successfully",
+        data: result,
+      },
+      200
+    );
+  }
+
+  static async updateComment(c: Context) {
+    const commentId = c.req.param("commentId")!;
+    const user = c.get("user") as AuthUser;
+    const body = await c.req.json();
+
+    const result = await CommentService.updateComment(commentId, user.id, body.body);
+    return c.json(
+      {
+        success: true,
+        message: "Comment updated successfully",
+        data: result,
+      },
+      200
+    );
+  }
+
   static async deleteComment(c: Context) {
     const commentId = c.req.param("commentId")!;
     const user = c.get("user") as AuthUser;
